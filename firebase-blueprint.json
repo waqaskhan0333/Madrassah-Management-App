@@ -1,0 +1,157 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User account and madrasa administrative profile",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "nameUr": { "type": "string" },
+        "nameEn": { "type": "string" },
+        "address": { "type": "string" },
+        "phone": { "type": "string" },
+        "email": { "type": "string" },
+        "principalName": { "type": "string" },
+        "campuses": { "type": "string" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "nameUr", "nameEn"]
+    },
+    "Student": {
+      "title": "Student",
+      "description": "Enrolled student entity in the madrasa",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "rollNo": { "type": "string" },
+        "name": { "type": "string" },
+        "fatherName": { "type": "string" },
+        "department": { "type": "string" },
+        "section": { "type": "string" },
+        "campus": { "type": "string" },
+        "guardianPhone": { "type": "string" },
+        "status": { "type": "string" },
+        "monthlyFee": { "type": "number" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "userId", "rollNo", "name", "department"]
+    },
+    "Teacher": {
+      "title": "Teacher",
+      "description": "Staff member or teacher in the madrasa",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "name": { "type": "string" },
+        "phone": { "type": "string" },
+        "role": { "type": "string" },
+        "assignedDepartment": { "type": "string" },
+        "assignedSections": { "type": "string" },
+        "campus": { "type": "string" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "userId", "name"]
+    },
+    "StudentAttendance": {
+      "title": "StudentAttendance",
+      "description": "Student daily attendance log",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "personId": { "type": "number" },
+        "date": { "type": "string" },
+        "status": { "type": "string" },
+        "remarks": { "type": "string" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "userId", "personId", "date", "status"]
+    },
+    "DailyProgress": {
+      "title": "DailyProgress",
+      "description": "Daily academic progress record for Hifz and Nazra",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "studentId": { "type": "number" },
+        "date": { "type": "string" },
+        "sabaqPara": { "type": "string" },
+        "sabaqAyat": { "type": "string" },
+        "sabaqi": { "type": "string" },
+        "manzil": { "type": "string" },
+        "quality": { "type": "string" },
+        "remarks": { "type": "string" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "userId", "studentId", "date"]
+    },
+    "FeeVoucher": {
+      "title": "FeeVoucher",
+      "description": "Fee invoice voucher issued to student",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "studentId": { "type": "number" },
+        "voucherNo": { "type": "string" },
+        "monthYear": { "type": "string" },
+        "totalPayable": { "type": "number" },
+        "paidAmount": { "type": "number" },
+        "status": { "type": "string" },
+        "dueDate": { "type": "string" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "userId", "studentId", "voucherNo", "monthYear", "totalPayable", "status"]
+    },
+    "PaymentRecord": {
+      "title": "PaymentRecord",
+      "description": "Fee payment receipt record",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "voucherId": { "type": "number" },
+        "studentId": { "type": "number" },
+        "receiptNo": { "type": "string" },
+        "paymentDate": { "type": "string" },
+        "amountPaid": { "type": "number" },
+        "paymentMode": { "type": "string" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "userId", "studentId", "receiptNo", "amountPaid"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}/profile/{profileId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "Administrative profile of the madrasa"
+    },
+    "/users/{userId}/students/{studentId}": {
+      "schema": { "$ref": "#/entities/Student" },
+      "description": "Enrolled students under the user's madrasa"
+    },
+    "/users/{userId}/teachers/{teacherId}": {
+      "schema": { "$ref": "#/entities/Teacher" },
+      "description": "Teachers employed in the user's madrasa"
+    },
+    "/users/{userId}/student_attendance/{attendanceId}": {
+      "schema": { "$ref": "#/entities/StudentAttendance" },
+      "description": "Daily student attendance records"
+    },
+    "/users/{userId}/daily_progress/{progressId}": {
+      "schema": { "$ref": "#/entities/DailyProgress" },
+      "description": "Daily student academic progress logs"
+    },
+    "/users/{userId}/fee_vouchers/{voucherId}": {
+      "schema": { "$ref": "#/entities/FeeVoucher" },
+      "description": "Fee vouchers and bills"
+    },
+    "/users/{userId}/payment_records/{paymentId}": {
+      "schema": { "$ref": "#/entities/PaymentRecord" },
+      "description": "Fee payment records and receipts"
+    }
+  }
+}

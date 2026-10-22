@@ -1,0 +1,6 @@
+{
+  "name": "Madrassa Manager",
+  "description": "Comprehensive offline-first Madrassa Management System with student & teacher profiles, Hifz/Nazra/Qaida tracking, digital attendance, fees, exams, and bilingual Urdu/English support.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

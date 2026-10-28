@@ -146,7 +146,12 @@ fun MadrassaEmblemTopBar(
 
                     Spacer(modifier = Modifier.width(10.dp))
 
-                    Column(modifier = Modifier.weight(1f)) {
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clip(RoundedCornerShape(8.dp))
+                            .clickable { onProfileClick() }
+                    ) {
                         Text(
                             text = if (LanguageState.isUrdu) madrassaNameAr else madrassaNameEn,
                             fontSize = 13.5.sp,

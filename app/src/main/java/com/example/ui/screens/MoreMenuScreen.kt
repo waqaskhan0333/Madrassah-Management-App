@@ -167,79 +167,13 @@ fun MoreMenuScreen(
                 contentPadding = PaddingValues(16.dp, bottom = 80.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                // Two Mode: Admin Mode vs Teacher Mode Switcher Card
-                item {
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(16.dp),
-                        colors = CardDefaults.cardColors(
-                            containerColor = if (UserRoleManager.isAdmin) Color(0xFF042418) else Color(0xFF1E3A8A)
-                        ),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(14.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(42.dp)
-                                        .clip(CircleShape)
-                                        .background(Color.White.copy(alpha = 0.15f)),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Icon(
-                                        imageVector = if (UserRoleManager.isAdmin) Icons.Default.AdminPanelSettings else Icons.Default.School,
-                                        contentDescription = null,
-                                        tint = if (UserRoleManager.isAdmin) Color(0xFFE5C07B) else Color.White
-                                    )
-                                }
-                                Spacer(modifier = Modifier.width(10.dp))
-                                Column {
-                                    Text(
-                                        text = if (UserRoleManager.isAdmin) "Admin Mode 👑" else "Teacher Mode 👨‍🏫",
-                                        fontWeight = FontWeight.Bold,
-                                        color = Color.White,
-                                        fontSize = 14.sp
-                                    )
-                                    Text(
-                                        text = if (UserRoleManager.isAdmin) "Authority to Add, Edit, Delete All" else "Restricted: Attendance & Class view",
-                                        color = Color.White.copy(alpha = 0.8f),
-                                        fontSize = 11.sp
-                                    )
-                                }
-                            }
-
-                            Button(
-                                onClick = {
-                                    UserRoleManager.toggleRole()
-                                    Toast.makeText(context, "Switched to ${if (UserRoleManager.isAdmin) "Admin" else "Teacher"} Mode", Toast.LENGTH_SHORT).show()
-                                },
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = if (UserRoleManager.isAdmin) Color(0xFFD4AF37) else Color.White
-                                ),
-                                shape = RoundedCornerShape(10.dp),
-                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
-                            ) {
-                                Text(
-                                    text = if (UserRoleManager.isAdmin) "Switch Teacher" else "Switch Admin",
-                                    fontSize = 11.5.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = if (UserRoleManager.isAdmin) Color(0xFF042418) else Color(0xFF1E3A8A)
-                                )
-                            }
-                        }
-                    }
-                }
-
-                // Admin & Madrassa Info Card with Logo
+                // Madrassa Info Card with Logo & Quick Edit
                 item {
                     Madrassa3dCard(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(18.dp))
+                            .clickable { activeSubSection = "SETTINGS" },
                         shape = RoundedCornerShape(18.dp),
                         elevation = 6.dp
                     ) {
@@ -274,18 +208,32 @@ fun MoreMenuScreen(
                                 }
                             }
                             Spacer(modifier = Modifier.width(14.dp))
-                            Column {
+                            Column(modifier = Modifier.weight(1f)) {
                                 Text(
-                                    text = if (LanguageState.isUrdu) profile.nameUr else profile.nameEn,
+                                    text = if (LanguageState.isUrdu) (if (profile.nameUr.isNotBlank()) profile.nameUr else "جامعہ دارالعلوم الاسلامیہ") else (if (profile.nameEn.isNotBlank()) profile.nameEn else "Jamia Darul Uloom Al-Islamia"),
                                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, color = Color.White)
                                 )
                                 Text(
-                                    text = "${t("principal_name")}: ${profile.principalName}",
+                                    text = "${t("principal_name")}: ${profile.principalName.ifBlank { "Admin" }}",
                                     style = MaterialTheme.typography.bodySmall.copy(color = Color.White.copy(alpha = 0.8f))
                                 )
                                 Text(
-                                    text = "${t("session_year")}: ${profile.sessionYear}",
+                                    text = "${t("session_year")}: ${profile.sessionYear.ifBlank { "2025-2026" }}",
                                     style = MaterialTheme.typography.bodySmall.copy(color = Color(0xFFE5C07B), fontWeight = FontWeight.SemiBold)
+                                )
+                            }
+                            IconButton(
+                                onClick = { activeSubSection = "SETTINGS" },
+                                modifier = Modifier
+                                    .size(36.dp)
+                                    .clip(CircleShape)
+                                    .background(Color.White.copy(alpha = 0.15f))
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Edit,
+                                    contentDescription = "Edit Madrassa Full Name",
+                                    tint = Color(0xFFE5C07B),
+                                    modifier = Modifier.size(18.dp)
                                 )
                             }
                         }
@@ -1814,11 +1762,93 @@ fun ProfileSettingsSubScreen(
                 }
             }
 
-            // Names & Mottos
-            OutlinedTextField(value = nameUr, onValueChange = { nameUr = it }, label = { Text("Madrassa Full Name in Urdu (جامعہ کا مکمل نام)") }, modifier = Modifier.fillMaxWidth())
-            OutlinedTextField(value = nameEn, onValueChange = { nameEn = it }, label = { Text("Madrassa Full Name in English") }, modifier = Modifier.fillMaxWidth())
-            OutlinedTextField(value = mottoUr, onValueChange = { mottoUr = it }, label = { Text("Motto in Urdu (علم • تربیت • بہترین مستقبل)") }, modifier = Modifier.fillMaxWidth())
-            OutlinedTextField(value = mottoEn, onValueChange = { mottoEn = it }, label = { Text("Motto in English") }, modifier = Modifier.fillMaxWidth())
+            // 2. Madrassa Full Name & Identity (Fully Editable in Urdu & English)
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(14.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                border = androidx.compose.foundation.BorderStroke(1.2.dp, EmeraldPrimary.copy(alpha = 0.4f))
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier
+                                .size(36.dp)
+                                .clip(CircleShape)
+                                .background(EmeraldPrimaryContainer),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.AccountBalance,
+                                contentDescription = null,
+                                tint = EmeraldPrimary,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Column {
+                            Text(
+                                text = "Madrassa Full Name & Institution Titles",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 14.5.sp,
+                                color = EmeraldPrimary
+                            )
+                            Text(
+                                text = "Fully editable — updates everywhere across app header, reports & cards",
+                                fontSize = 11.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    OutlinedTextField(
+                        value = nameUr,
+                        onValueChange = { nameUr = it },
+                        label = { Text("Madrassa Full Name in Urdu (جامعہ کا مکمل نام)") },
+                        placeholder = { Text("مثال: جامعہ دارالعلوم الاسلامیہ") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = false,
+                        maxLines = 2,
+                        shape = RoundedCornerShape(10.dp)
+                    )
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    OutlinedTextField(
+                        value = nameEn,
+                        onValueChange = { nameEn = it },
+                        label = { Text("Madrassa Full Name in English") },
+                        placeholder = { Text("e.g. Jamia Darul Uloom Al-Islamia") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = false,
+                        maxLines = 2,
+                        shape = RoundedCornerShape(10.dp)
+                    )
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    OutlinedTextField(
+                        value = mottoUr,
+                        onValueChange = { mottoUr = it },
+                        label = { Text("Motto / Subtitle in Urdu (علم • تربیت • بہترین مستقبل)") },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(10.dp)
+                    )
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    OutlinedTextField(
+                        value = mottoEn,
+                        onValueChange = { mottoEn = it },
+                        label = { Text("Motto / Subtitle in English") },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(10.dp)
+                    )
+                }
+            }
 
             // Principal & Registration
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {

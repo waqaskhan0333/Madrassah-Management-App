@@ -25,13 +25,15 @@
 | **Software House** | **Waqas Software House** |
 | **Direct Contact / WhatsApp** | [**+92 343 4487450**](https://wa.me/92343487450) (`tel:+92343487450`) |
 | **Category** | Islamic Educational Technology & Seminary ERP |
-| **Architecture** | 100% Offline-First SQLite (Room) + Optional Firebase Cloud Sync |
-| **License & Commercial Use** | Proprietary & Commercial Ready (Waqas Software House) |
+| **Architecture** | 100% Offline-First SQLite (Room) + Optional Centralized Firebase Cloud Sync |
+| **Design System** | Material Design 3 (M3) Emerald Jade & Islamic Gold Palette with 3D Depth |
+| **License & Commercial Use** | Commercial Ready & Proprietary by **Waqas Software House** |
 
 ---
 
 ## 📖 Table of Contents
 - [✨ Key Features](#-key-features)
+- [🏷️ Full Customization & Editing Madrassah Full Name](#️-full-customization--editing-madrassah-full-name)
 - [🏛️ System Architecture](#️-system-architecture)
 - [📱 Complete Mobile Installation Guide (APK Sideloading)](#-complete-mobile-installation-guide-apk-sideloading)
 - [💻 Developer Setup & Android Studio Build](#-developer-setup--android-studio-build)
@@ -82,7 +84,27 @@
 
 ### 7. ☁️ Offline-First with Centralized Cloud Synchronization in Settings
 - **100% Offline Capable**: Powered by a robust local Room SQLite database with full foreign-key constraints and ACID transactions.
-- **Centralized Cloud Sync**: Manual cloud synchronization is cleanly consolidated in **Settings** (`More` → `Settings`), maintaining a clean, uncluttered interface across all operational screens while automatically syncing to Firebase Firestore when internet connectivity is detected.
+- **Dedicated Sync in Settings**: Manual cloud synchronization is cleanly consolidated in **Settings** (`More` → `Settings`), maintaining an uncluttered interface across all operational screens while automatically syncing to Firebase Firestore when internet connectivity is detected.
+
+---
+
+## 🏷️ Full Customization & Editing Madrassah Full Name
+
+Madrassah Manager allows seminary administrators to completely brand the application with their institution's official identity:
+
+### How to Edit the Madrassah Full Name:
+1. **Via Top Header**: Tap on the **Madrassah Name** or **Emblem** in the top navigation bar from any screen to directly open the **Settings** editor.
+2. **Via More Page**: Open **More** (`≡`) and tap the **Madrassah Info Card** (or click the ✏️ **Edit** icon).
+3. **Editable Fields**:
+   - **Madrassah Full Name in Urdu (جامعہ کا مکمل نام)**: e.g. `جامعہ دارالعلوم الاسلامیہ`
+   - **Madrassah Full Name in English**: e.g. `Jamia Darul Uloom Al-Islamia`
+   - **Motto / Subtitle in Urdu**: e.g. `علم • تربیت • بہترین مستقبل`
+   - **Motto / Subtitle in English**: e.g. `Knowledge • Practice • Righteousness`
+   - **Principal / Mohtamim Name (مہتمم / ناظم)**: e.g. `Molana Mufti Muhammad Tariq Sahab`
+   - **Registration Number & Academic Session Year**: e.g. `REG-1447` • `2025-2026`
+   - **Official Logo / Emblem**: Upload your seminary's high-resolution insignia from internal storage or gallery.
+   - **Receipt Footer Note**: Custom message printed at the bottom of fee receipts and exam marksheets.
+4. **Instant Dynamic Updates**: Once saved, all changes immediately update across the **Dashboard Header**, **Student ID Cards**, **Fee Vouchers**, **Attendance Sheets**, and **Printable PDF Reports**!
 
 ---
 
@@ -215,7 +237,7 @@ Prepare the following assets required by the Google Play Console:
 | **Short Description** | Max 80 characters | `Seminary & Madrassa management for students, attendance, fees & Hifz tracking.` |
 | **Full Description** | Max 4,000 characters | Complete features list (Academic progress, fees, bilingual, offline database). |
 | **App Icon** | 512 x 512 px, 32-bit PNG, max 1MB | High-resolution Madrassah emblem. |
-| **Feature Graphic** | 1024 x 500 px, JPEG or 24-bit PNG | Promotional banner (Use the included banner asset). |
+| **Feature Graphic** | 1024 x 500 px, JPEG or 24-bit PNG | Promotional banner (Use the included showcase banner asset). |
 | **Screenshots** | Min 2, Max 8 per device type (Phone & 7"/10" Tablet) | 16:9 or 9:16 aspect ratio (e.g., 1080 x 2400 px). |
 | **Privacy Policy URL** | Active public URL (GitHub Pages / Website) | Disclosing local storage & zero 3rd-party ad SDKs. |
 

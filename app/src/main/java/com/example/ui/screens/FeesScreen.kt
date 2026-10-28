@@ -147,9 +147,6 @@ fun FeesScreen(
                             Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                         }
                     },
-                    actions = {
-                        SyncStatusPill(viewModel = viewModel, modifier = Modifier.padding(end = 8.dp))
-                    },
                     colors = TopAppBarDefaults.topAppBarColors(
                         containerColor = EmeraldPrimary,
                         titleContentColor = Color.White,

@@ -1,12 +1,32 @@
-# 🕌 Madrassa Manager (جامعہ مینیجر)
+<p align="center">
+  <img src="public/assets/aistudio/Madrassah_Manager_Islamic_App_Showcase_1faf335c.png" alt="Madrassah Manager Islamic App Showcase Banner" width="100%">
+</p>
+
+# 🕌 Madrassah Manager (جامعہ مینیجر)
 ### *Enterprise-Grade, Offline-First Islamic Seminary & Education Management System for Android*
 
-[![Android](https://img.shields.io/badge/Platform-Android_14+_|_(API_24--36)-3DDC84?style=for-the-badge&logo=android&logoColor=white)](https://developer.android.com)
-[![Kotlin](https://img.shields.io/badge/Kotlin-2.0-7F52FF?style=for-the-badge&logo=kotlin&logoColor=white)](https://kotlinlang.org)
-[![Jetpack Compose](https://img.shields.io/badge/UI-Jetpack_Compose_M3-4285F4?style=for-the-badge&logo=jetpackcompose&logoColor=white)](https://developer.android.com/jetpack/compose)
-[![Room Database](https://img.shields.io/badge/Storage-Room_SQLite_Offline_First-FF6F00?style=for-the-badge&logo=sqlite&logoColor=white)](https://developer.android.com/training/data-storage/room)
-[![Firebase Sync](https://img.shields.io/badge/Cloud-Firebase_Firestore_Sync-FFCA28?style=for-the-badge&logo=firebase&logoColor=black)](https://firebase.google.com)
-[![License](https://img.shields.io/badge/License-Proprietary_/_Commercial_Ready-00C853?style=for-the-badge)](#)
+<p align="center">
+  <a href="https://developer.android.com"><img src="https://img.shields.io/badge/Platform-Android_14+_|_(API_24--36)-3DDC84?style=for-the-badge&logo=android&logoColor=white" alt="Android Platform"></a>
+  <a href="https://kotlinlang.org"><img src="https://img.shields.io/badge/Kotlin-2.0-7F52FF?style=for-the-badge&logo=kotlin&logoColor=white" alt="Kotlin 2.0"></a>
+  <a href="https://developer.android.com/jetpack/compose"><img src="https://img.shields.io/badge/UI-Jetpack_Compose_M3-4285F4?style=for-the-badge&logo=jetpackcompose&logoColor=white" alt="Jetpack Compose M3"></a>
+  <a href="https://developer.android.com/training/data-storage/room"><img src="https://img.shields.io/badge/Storage-Room_SQLite_Offline_First-FF6F00?style=for-the-badge&logo=sqlite&logoColor=white" alt="Room SQLite"></a>
+  <a href="https://firebase.google.com"><img src="https://img.shields.io/badge/Cloud-Firebase_Firestore_Sync-FFCA28?style=for-the-badge&logo=firebase&logoColor=black" alt="Firebase Sync"></a>
+  <a href="https://wa.me/92343487450"><img src="https://img.shields.io/badge/WhatsApp-Contact_+92_343_4487450-25D366?style=for-the-badge&logo=whatsapp&logoColor=white" alt="WhatsApp Contact"></a>
+  <a href="#-developer--brand-information"><img src="https://img.shields.io/badge/Branded-Waqas_Software_House-004D40?style=for-the-badge&logo=googlecloud&logoColor=white" alt="Waqas Software House"></a>
+</p>
+
+---
+
+## 👨‍💻 Developer & Brand Information
+
+| Attribute | Details |
+| :--- | :--- |
+| **Lead Architect & Developer** | **Waqas** |
+| **Software House** | **Waqas Software House** |
+| **Direct Contact / WhatsApp** | [**+92 343 4487450**](https://wa.me/92343487450) (`tel:+92343487450`) |
+| **Category** | Islamic Educational Technology & Seminary ERP |
+| **Architecture** | 100% Offline-First SQLite (Room) + Optional Firebase Cloud Sync |
+| **License & Commercial Use** | Proprietary & Commercial Ready (Waqas Software House) |
 
 ---
 
@@ -24,15 +44,16 @@
 - [🔒 Permissions & Google Play Policy Compliance](#-permissions--google-play-policy-compliance)
 - [🌐 Bilingual & RTL Localization](#-bilingual--rtl-localization)
 - [❓ Troubleshooting & FAQ](#-troubleshooting--faq)
+- [📞 Inquiries & Custom Implementations](#-inquiries--custom-implementations)
 
 ---
 
 ## ✨ Key Features
 
 ### 1. 🎛️ Executive Dashboard & 3D Interactive Cards
-- **3D Animated Counter Cards**: Real-time metrics for Total Students, Active Teachers, Pending Dues, and Daily Attendance percentages with custom depth elevation and dynamic gloss accents.
-- **Madrassa Emblem Header**: Displays institutional branding in English and Arabic (`Jamia Darul Uloom Al-Islamia`) alongside Hijri Islamic Calendar dates (`15 Rabi-ul-Awwal 1447 AH`).
-- **Quick Action Grid**: Single-tap shortcuts for Admissions, Fee Collection, Daily Sabaq, and Exam Marksheets.
+- **3D Animated Counter Cards**: Real-time metrics for Total Students, Active Faculty (Asatiza), Pending Dues, and Daily Attendance percentages with depth elevation and dynamic gloss accents.
+- **Madrassah Emblem Header**: Displays institutional branding in English and Arabic (`Jamia Darul Uloom Al-Islamia`) alongside Hijri Islamic Calendar dates (`15 Rabi-ul-Awwal 1447 AH`).
+- **Quick Action Grid**: Instant shortcuts for Admissions, Fee Collection, Daily Sabaq, and Exam Marksheets.
 
 ### 2. 👨‍🎓 Comprehensive Student & Teacher Directory
 - **Deep Profiles**: Full biodata including Roll Number, Registration Date, Guardian Information, Emergency Contacts, Blood Group, and Current Enrolled Department (Hifz, Nazra, Dars-e-Nizami, Tajweed).
@@ -59,9 +80,9 @@
 - **Native PDF Document Generation**: Built-in reports for Fee Slips, Student Identity Cards, Attendance Sheets, and Exam Marksheets without external web wrappers.
 - **Oral & Written Exam Scoring**: Special grading criteria for Hifz Oral Assessments (Talaffuz, Ravani, Tartil, and Kul Number).
 
-### 7. ☁️ Offline-First with Auto Cloud Sync
+### 7. ☁️ Offline-First with Centralized Cloud Synchronization in Settings
 - **100% Offline Capable**: Powered by a robust local Room SQLite database with full foreign-key constraints and ACID transactions.
-- **Cloud Backup**: Real-time snapshot synchronization with Google Cloud Firestore when internet connectivity is detected.
+- **Centralized Cloud Sync**: Manual cloud synchronization is cleanly consolidated in **Settings** (`More` → `Settings`), maintaining a clean, uncluttered interface across all operational screens while automatically syncing to Firebase Firestore when internet connectivity is detected.
 
 ---
 
@@ -105,7 +126,7 @@ Because this APK is built directly for your institution:
 3. If Google Play Protect displays a prompt stating *"Blocked by Play Protect"* (standard for private ad-hoc APKs before Play Store publication):
    - Tap **More details** (or the down arrow).
    - Tap **Install anyway**.
-4. Tap **Open** to launch Madrassa Manager!
+4. Tap **Open** to launch Madrassah Manager!
 
 ---
 
@@ -137,7 +158,7 @@ The compiled APK will be generated at:
 
 ## 🚀 Google Play Store Release & Deployment Guide
 
-Follow this definitive checklist to package, sign, and upload Madrassa Manager to the **Google Play Console**.
+Follow this definitive checklist to package, sign, and upload Madrassah Manager to the **Google Play Console**.
 
 ---
 
@@ -150,7 +171,7 @@ keytool -genkey -v -keystore my-upload-key.jks \
   -alias upload \
   -storepass YOUR_SECURE_PASSWORD \
   -keypass YOUR_SECURE_PASSWORD \
-  -dname "CN=Jamia Darul Uloom, OU=IT Department, O=Madrassa Manager, L=Lahore, ST=Punjab, C=PK"
+  -dname "CN=Waqas Software House, OU=IT Department, O=Waqas Software House, L=Lahore, ST=Punjab, C=PK"
 ```
 
 > ⚠️ **CRITICAL WARNING**: Back up `my-upload-key.jks` and your passwords in multiple secure locations. If you lose this key, you will not be able to update your app on Google Play!
@@ -193,22 +214,24 @@ Prepare the following assets required by the Google Play Console:
 | **App Name** | Max 30 characters | `Madrassa Manager` |
 | **Short Description** | Max 80 characters | `Seminary & Madrassa management for students, attendance, fees & Hifz tracking.` |
 | **Full Description** | Max 4,000 characters | Complete features list (Academic progress, fees, bilingual, offline database). |
-| **App Icon** | 512 x 512 px, 32-bit PNG, max 1MB | High-resolution Madrassa emblem. |
-| **Feature Graphic** | 1024 x 500 px, JPEG or 24-bit PNG | Promotional banner highlighting key features. |
+| **App Icon** | 512 x 512 px, 32-bit PNG, max 1MB | High-resolution Madrassah emblem. |
+| **Feature Graphic** | 1024 x 500 px, JPEG or 24-bit PNG | Promotional banner (Use the included banner asset). |
 | **Screenshots** | Min 2, Max 8 per device type (Phone & 7"/10" Tablet) | 16:9 or 9:16 aspect ratio (e.g., 1080 x 2400 px). |
 | **Privacy Policy URL** | Active public URL (GitHub Pages / Website) | Disclosing local storage & zero 3rd-party ad SDKs. |
 
 #### Sample Google Play Store Description Template:
 ```text
-Madrassa Manager is an enterprise-grade digital administration platform built specifically for Islamic seminaries, Jamias, and Maktabs. 
+Madrassah Manager by Waqas Software House is an enterprise-grade digital administration platform built specifically for Islamic seminaries, Jamias, and Maktabs.
 
 Key Capabilities:
-• Student & Teacher Administration: Digital admission records, roll numbers, guardian contacts, and photo records.
+• Student & Faculty Administration: Digital admission records, roll numbers, guardian contacts, and photo records.
 • Quranic Academic Management: Detailed tracking for Hifz (Sabaq, Sabqi, Manzil), Nazra, Qaida Nooraniyah, and Tajweed with Quranic verse accuracy.
 • Digital Attendance Register: High-contrast, sunlight-readable attendance recording with instant "Mark All Present".
 • Complete Financial Khata & Dues: Fee vouchers, invoice generation, balance tracking (Udhaar), payment history, and printable PDF statements.
 • Bilingual Interface: Instant switching between Urdu (اردو) and English.
 • 100% Offline-First: Fully functional in remote areas without internet; automatic cloud sync when connected.
+
+Developed & Maintained by Waqas Software House. Contact: +92 343 4487450
 ```
 
 ---
@@ -230,7 +253,7 @@ Key Capabilities:
 3. **Upload Bundle**:
    - Navigate to **Production** (or **Closed Testing** for 20 testers if using a personal account).
    - Create a new release and upload `app/build/outputs/bundle/release/app-release.aab`.
-   - Add Release Notes (e.g., *"Initial release of Madrassa Manager 1.0 with Hifz tracking, attendance register, and student photo manager"*).
+   - Add Release Notes (e.g., *"Initial release of Madrassah Manager 1.0 by Waqas Software House"*).
 
 4. **Review & Rollout**:
    - Click **Review release**.
@@ -241,7 +264,7 @@ Key Capabilities:
 
 ## 🔒 Permissions & Google Play Policy Compliance
 
-Madrassa Manager adheres strictly to modern Google Play developer safety standards:
+Madrassah Manager adheres strictly to modern Google Play developer safety standards:
 
 | Permission | Usage Purpose | User Experience |
 | :--- | :--- | :--- |
@@ -276,5 +299,17 @@ The application features full dynamic language switching without requiring an ap
 
 ---
 
-### 🏢 Developed for Islamic Seminaries & Educational Institutions
-*Madrassa Manager — Built with dedication to honor and streamline Islamic education worldwide.*
+## 📞 Inquiries & Custom Implementations
+
+For custom deployments, tailored Madrassah features, multi-branch network setups, or dedicated tech support:
+
+- 👤 **Creator & Lead Developer**: **Waqas**
+- 🏢 **Software House**: **Waqas Software House**
+- 📱 **Direct Mobile & WhatsApp**: [**+92 343 4487450**](https://wa.me/92343487450)
+- 📍 **Headquarters**: Pakistan
+
+<p align="center">
+  <b>علم • عَمَل • تَقویٰ</b><br>
+  <i>Knowledge • Practice • Righteousness</i><br><br>
+  <b>Madrassah Manager</b> — <i>Crafted with excellence by <b>Waqas Software House</b> to honor and streamline Islamic education worldwide.</i>
+</p>

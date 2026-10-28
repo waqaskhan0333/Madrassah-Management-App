@@ -141,6 +141,7 @@ fun MoreMenuScreen(
         "SETTINGS" -> ProfileSettingsSubScreen(
             profile = profile,
             students = students,
+            viewModel = viewModel,
             onBack = closeSubSection,
             onSaveProfile = { viewModel.updateProfile(it) }
         )
@@ -1485,10 +1486,15 @@ fun CoursesSubScreen(
 fun ProfileSettingsSubScreen(
     profile: MadrassaProfile,
     students: List<Student> = emptyList(),
+    viewModel: MadrassaViewModel,
     onBack: () -> Unit,
     onSaveProfile: (MadrassaProfile) -> Unit
 ) {
     val context = LocalContext.current
+    val syncState by viewModel.syncState.collectAsState()
+    val coroutineScope = rememberCoroutineScope()
+    var isSigningIn by remember { mutableStateOf(false) }
+
     var nameEn by remember { mutableStateOf(profile.nameEn) }
     var nameUr by remember { mutableStateOf(profile.nameUr) }
     var mottoUr by remember { mutableStateOf(profile.mottoUr) }
@@ -1571,6 +1577,137 @@ fun ProfileSettingsSubScreen(
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
+            // 0. Dedicated Cloud Data Synchronization Card (The ONLY place for Synchronize)
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
+                border = androidx.compose.foundation.BorderStroke(1.dp, EmeraldPrimary.copy(alpha = 0.35f))
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+                            Box(
+                                modifier = Modifier
+                                    .size(42.dp)
+                                    .clip(CircleShape)
+                                    .background(EmeraldPrimaryContainer),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.CloudSync,
+                                    contentDescription = "Cloud Sync",
+                                    tint = EmeraldPrimary,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column {
+                                Text(
+                                    text = if (LanguageState.isUrdu) "کلاؤڈ سنکرونائزیشن" else "Cloud Data Synchronization",
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 14.sp,
+                                    color = EmeraldPrimary
+                                )
+                                Text(
+                                    text = if (syncState.isOnline) "🟢 Online • Connected to Internet" else "⚡ Offline Mode • Local SQLite",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = if (syncState.isOnline) Color(0xFF2E7D32) else Color(0xFFE65100)
+                                )
+                            }
+                        }
+
+                        // Synchronize Button
+                        Button(
+                            onClick = {
+                                if (syncState.currentUserEmail != null) {
+                                    viewModel.triggerManualSync()
+                                    Toast.makeText(context, "Syncing data with cloud...", Toast.LENGTH_SHORT).show()
+                                } else {
+                                    val activity = context as? android.app.Activity
+                                    if (activity != null) {
+                                        isSigningIn = true
+                                        viewModel.authManager.signInWithGoogle(
+                                            activity = activity,
+                                            scope = coroutineScope,
+                                            onSuccess = {
+                                                isSigningIn = false
+                                                viewModel.triggerManualSync()
+                                                Toast.makeText(context, "Signed in & sync started!", Toast.LENGTH_SHORT).show()
+                                            },
+                                            onError = {
+                                                isSigningIn = false
+                                                Toast.makeText(context, "Sign-in cancelled or failed", Toast.LENGTH_SHORT).show()
+                                            }
+                                        )
+                                    }
+                                }
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = EmeraldPrimary),
+                            shape = RoundedCornerShape(10.dp),
+                            enabled = syncState.status != com.example.data.sync.SyncStatus.SYNCING && !isSigningIn
+                        ) {
+                            if (syncState.status == com.example.data.sync.SyncStatus.SYNCING || isSigningIn) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(14.dp),
+                                    color = Color.White,
+                                    strokeWidth = 2.dp
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text("Syncing...", fontSize = 11.5.sp, fontWeight = FontWeight.Bold)
+                            } else {
+                                Icon(Icons.Default.Sync, contentDescription = null, modifier = Modifier.size(15.dp))
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = if (syncState.currentUserEmail != null) "Synchronize" else "Sign In & Sync",
+                                    fontSize = 11.5.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    val lastSyncStr = if (syncState.lastSyncTime > 0) {
+                        val diff = (System.currentTimeMillis() - syncState.lastSyncTime) / 1000
+                        if (diff < 60) "Just now" else "${diff / 60}m ago"
+                    } else "Never"
+
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 10.dp, vertical = 6.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Account: ${syncState.currentUserEmail ?: "Unconnected"}",
+                                fontSize = 11.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Text(
+                                text = "Last synced: $lastSyncStr",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
+            }
+
             // Live Preview Card (Emerald & Gold)
             Madrassa3dCard(
                 modifier = Modifier.fillMaxWidth(),

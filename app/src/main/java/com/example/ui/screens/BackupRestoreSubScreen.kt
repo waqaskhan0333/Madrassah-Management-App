@@ -307,50 +307,17 @@ fun BackupRestoreSubScreen(
                                 }
                             }
 
-                            if (syncState.currentUserEmail != null) {
-                                Button(
-                                    onClick = { viewModel.triggerManualSync() },
-                                    colors = ButtonDefaults.buttonColors(containerColor = EmeraldPrimary),
-                                    shape = RoundedCornerShape(8.dp),
-                                    enabled = syncState.status != com.example.data.sync.SyncStatus.SYNCING
-                                ) {
-                                    if (syncState.status == com.example.data.sync.SyncStatus.SYNCING) {
-                                        CircularProgressIndicator(modifier = Modifier.size(14.dp), color = Color.White, strokeWidth = 2.dp)
-                                        Spacer(modifier = Modifier.width(4.dp))
-                                        Text("Syncing...", fontSize = 11.5.sp)
-                                    } else {
-                                        Icon(Icons.Default.Sync, contentDescription = null, modifier = Modifier.size(14.dp))
-                                        Spacer(modifier = Modifier.width(4.dp))
-                                        Text("Sync Now", fontSize = 11.5.sp)
-                                    }
-                                }
-                            } else {
-                                Button(
-                                    onClick = {
-                                        isSigningIn = true
-                                        val activity = context as? android.app.Activity
-                                        if (activity != null) {
-                                            viewModel.authManager.signInWithGoogle(
-                                                activity = activity,
-                                                scope = coroutineScope,
-                                                onSuccess = {
-                                                    isSigningIn = false
-                                                    viewModel.triggerManualSync()
-                                                },
-                                                onError = {
-                                                    isSigningIn = false
-                                                }
-                                            )
-                                        }
-                                    },
-                                    colors = ButtonDefaults.buttonColors(containerColor = EmeraldPrimary),
-                                    shape = RoundedCornerShape(8.dp),
-                                    enabled = !isSigningIn
-                                ) {
-                                    Icon(Icons.Default.CloudUpload, contentDescription = null, modifier = Modifier.size(14.dp))
-                                    Spacer(modifier = Modifier.width(4.dp))
-                                    Text("Sign In & Sync", fontSize = 11.5.sp)
-                                }
+                            Surface(
+                                shape = RoundedCornerShape(8.dp),
+                                color = EmeraldPrimaryContainer.copy(alpha = 0.45f)
+                            ) {
+                                Text(
+                                    text = "Managed in Settings",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = EmeraldPrimary,
+                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+                                )
                             }
                         }
                     }

@@ -36,7 +36,6 @@ import com.example.ui.components.FullCalendarAttendanceView
 import com.example.ui.components.Madrassa3dBadge
 import com.example.ui.components.Madrassa3dCard
 import com.example.ui.components.Madrassa3dMetricTile
-import com.example.ui.components.SyncStatusPill
 import com.example.ui.theme.*
 import com.example.ui.viewmodel.MadrassaViewModel
 import com.example.util.UserRoleManager
@@ -172,13 +171,11 @@ fun AttendanceScreen(
                                 )
                             }
 
-                            // Sync Status & Quick Buttons
+                            // Quick Buttons
                             Row(
                                 horizontalArrangement = Arrangement.spacedBy(6.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                SyncStatusPill(viewModel = viewModel)
-
                                 IconButton(
                                     onClick = { showBiometricDialog = true },
                                     modifier = Modifier

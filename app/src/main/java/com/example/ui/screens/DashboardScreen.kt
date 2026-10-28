@@ -54,8 +54,6 @@ fun DashboardScreen(
     val courses by viewModel.courses.collectAsState()
     val vouchers by viewModel.vouchers.collectAsState()
     val todayAttendance by viewModel.studentAttendance.collectAsState()
-    val syncState by viewModel.syncState.collectAsState()
-    var showSyncDialog by remember { mutableStateOf(false) }
 
     var searchQuery by remember { mutableStateOf("") }
     var selectedDept by remember { mutableStateOf("All Depts") }
@@ -181,12 +179,6 @@ fun DashboardScreen(
 
         // 4. Quick Actions
         item {
-            val syncBadge = when (syncState.status) {
-                com.example.data.sync.SyncStatus.SYNCING -> "..."
-                com.example.data.sync.SyncStatus.SUCCESS -> "OK"
-                com.example.data.sync.SyncStatus.ERROR -> "!"
-                else -> if (syncState.isOnline) "ON" else null
-            }
             QuickActionsSection(
                 onNavigateToStudents = onNavigateToStudents,
                 onNavigateToAttendance = onNavigateToAttendance,
@@ -195,9 +187,7 @@ fun DashboardScreen(
                 onNavigateToExams = onNavigateToExams,
                 onNavigateToTeachers = onNavigateToTeachers,
                 onNavigateToReports = { viewModel.generatePdfReport(context) },
-                onNavigateToCourses = onNavigateToCourses,
-                onCloudBackupClick = { showSyncDialog = true },
-                cloudSyncBadge = syncBadge
+                onNavigateToCourses = onNavigateToCourses
             )
         }
 
@@ -500,12 +490,5 @@ fun DashboardScreen(
                 }
             }
         }
-    }
-
-    if (showSyncDialog) {
-        SyncDetailsDialog(
-            viewModel = viewModel,
-            onDismiss = { showSyncDialog = false }
-        )
     }
 }

@@ -52,8 +52,7 @@ fun MadrassaEmblemTopBar(
     adminName: String = "Admin",
     onNotificationClick: () -> Unit = {},
     onProfileClick: () -> Unit = {},
-    onLanguageToggle: () -> Unit = {},
-    syncPill: @Composable (() -> Unit)? = null
+    onLanguageToggle: () -> Unit = {}
 ) {
     var show3dEmblemDialog by remember { mutableStateOf(false) }
 
@@ -175,14 +174,11 @@ fun MadrassaEmblemTopBar(
                     }
                 }
 
-                // Right: Sync Pill + Language Switcher + Profile Avatar
+                // Right: Language Switcher + Profile Avatar
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
-                    if (syncPill != null) {
-                        syncPill()
-                    }
                     // Language Switcher Badge
                     Box(
                         modifier = Modifier
@@ -1082,8 +1078,6 @@ fun QuickActionsSection(
     onNavigateToTeachers: () -> Unit,
     onNavigateToReports: () -> Unit,
     onNavigateToCourses: () -> Unit,
-    onCloudBackupClick: () -> Unit = {},
-    cloudSyncBadge: String? = null,
     modifier: Modifier = Modifier
 ) {
     Column(modifier = modifier.padding(horizontal = 16.dp)) {
@@ -1131,11 +1125,11 @@ fun QuickActionsSection(
             QuickActionButton(title = t("asatiza"), icon = Icons.Default.Person, badge = null, modifier = Modifier.weight(1f), onClick = onNavigateToTeachers)
             QuickActionButton(title = t("classes"), icon = Icons.Default.Class, badge = null, modifier = Modifier.weight(1f), onClick = onNavigateToCourses)
             QuickActionButton(
-                title = if (LanguageState.isUrdu) "کلاؤڈ بیک اپ" else "Cloud Sync",
-                icon = Icons.Default.CloudSync,
-                badge = cloudSyncBadge,
+                title = if (LanguageState.isUrdu) "رپورٹس" else "Reports",
+                icon = Icons.Default.PictureAsPdf,
+                badge = null,
                 modifier = Modifier.weight(1f),
-                onClick = onCloudBackupClick
+                onClick = onNavigateToReports
             )
         }
     }

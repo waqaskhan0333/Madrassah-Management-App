@@ -38,7 +38,6 @@ import coil.compose.AsyncImage
 import com.example.data.model.MadrassaProfile
 import com.example.data.model.Student
 import com.example.ui.components.MadrassaEmblemTopBar
-import com.example.ui.components.SyncStatusPill
 import com.example.ui.screens.*
 import com.example.ui.theme.EmeraldPrimary
 import com.example.ui.theme.MadrassaTheme
@@ -116,8 +115,7 @@ fun MadrassaApp(viewModel: MadrassaViewModel) {
                         moreSubSectionToOpen = "SETTINGS"
                         currentScreen = 4
                     },
-                    onLanguageToggle = { LanguageState.toggle() },
-                    syncPill = { SyncStatusPill(viewModel = viewModel) }
+                    onLanguageToggle = { LanguageState.toggle() }
                 )
             },
             bottomBar = {

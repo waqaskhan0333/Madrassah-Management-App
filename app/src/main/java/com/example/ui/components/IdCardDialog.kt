@@ -182,7 +182,7 @@ fun IdCardDialog(
                                     color = Color(0xFF0A4B2D)
                                 )
                                 Text(text = "Father: ${student.fatherName}", fontSize = 11.sp, color = Color.DarkGray)
-                                Text(text = "Dept: ${student.department} (${student.section})", fontSize = 11.sp, color = Color.DarkGray)
+                                Text(text = "Class: ${student.department} (${student.section})", fontSize = 11.sp, color = Color.DarkGray)
                                 Text(text = "Para: ${student.paray}  •  ${student.campus}", fontSize = 10.5.sp, color = Color.DarkGray)
                                 Text(text = "Phone: ${student.guardianPhone}", fontSize = 10.5.sp, color = Color.DarkGray)
                             }

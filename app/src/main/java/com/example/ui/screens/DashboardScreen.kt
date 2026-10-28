@@ -1,6 +1,8 @@
 package com.example.ui.screens
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -15,6 +17,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -51,6 +54,8 @@ fun DashboardScreen(
     val courses by viewModel.courses.collectAsState()
     val vouchers by viewModel.vouchers.collectAsState()
     val todayAttendance by viewModel.studentAttendance.collectAsState()
+    val syncState by viewModel.syncState.collectAsState()
+    var showSyncDialog by remember { mutableStateOf(false) }
 
     var searchQuery by remember { mutableStateOf("") }
     var selectedDept by remember { mutableStateOf("All Depts") }
@@ -176,6 +181,12 @@ fun DashboardScreen(
 
         // 4. Quick Actions
         item {
+            val syncBadge = when (syncState.status) {
+                com.example.data.sync.SyncStatus.SYNCING -> "..."
+                com.example.data.sync.SyncStatus.SUCCESS -> "OK"
+                com.example.data.sync.SyncStatus.ERROR -> "!"
+                else -> if (syncState.isOnline) "ON" else null
+            }
             QuickActionsSection(
                 onNavigateToStudents = onNavigateToStudents,
                 onNavigateToAttendance = onNavigateToAttendance,
@@ -184,7 +195,9 @@ fun DashboardScreen(
                 onNavigateToExams = onNavigateToExams,
                 onNavigateToTeachers = onNavigateToTeachers,
                 onNavigateToReports = { viewModel.generatePdfReport(context) },
-                onNavigateToCourses = onNavigateToCourses
+                onNavigateToCourses = onNavigateToCourses,
+                onCloudBackupClick = { showSyncDialog = true },
+                cloudSyncBadge = syncBadge
             )
         }
 
@@ -331,26 +344,30 @@ fun DashboardScreen(
                 val attRecord = todayAttendance.find { it.personId == student.id }
                 val attStatus = attRecord?.status ?: "UNMARKED"
 
-                Card(
+                Madrassa3dCard(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp)
-                        .clickable { onNavigateToStudents() },
-                    shape = RoundedCornerShape(14.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                        .padding(horizontal = 16.dp),
+                    onClick = onNavigateToStudents,
+                    shape = RoundedCornerShape(16.dp),
+                    elevation = 5.dp
                 ) {
                     Column(modifier = Modifier.padding(14.dp)) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            // Photo Circle
+                            // 3D Embossed Avatar Orb with Gold Ring
                             Box(
                                 modifier = Modifier
-                                    .size(50.dp)
+                                    .size(52.dp)
                                     .clip(CircleShape)
-                                    .background(EmeraldPrimaryContainer),
+                                    .background(
+                                        Brush.radialGradient(
+                                            listOf(Color(0xFF1B6B4F), Color(0xFF042418))
+                                        )
+                                    )
+                                    .border(1.5.dp, Color(0xFFE5C07B).copy(alpha = 0.85f), CircleShape),
                                 contentAlignment = Alignment.Center
                             ) {
                                 if (student.photoUri.isNotBlank()) {
@@ -364,7 +381,7 @@ fun DashboardScreen(
                                     Text(
                                         text = student.name.firstOrNull()?.uppercase() ?: "ط",
                                         fontWeight = FontWeight.Bold,
-                                        color = EmeraldPrimary,
+                                        color = Color(0xFFFFF0C2),
                                         fontSize = 18.sp
                                     )
                                 }
@@ -380,64 +397,51 @@ fun DashboardScreen(
                                 ) {
                                     Text(
                                         text = student.name,
-                                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, color = Color.White),
                                         softWrap = true,
                                         maxLines = 2,
                                         modifier = Modifier.weight(1f, fill = false)
                                     )
 
-                                    Surface(
-                                        shape = RoundedCornerShape(6.dp),
-                                        color = EmeraldPrimaryContainer
-                                    ) {
-                                        Text(
-                                            text = "Roll: ${student.rollNo}",
-                                            fontSize = 11.sp,
-                                            fontWeight = FontWeight.Bold,
-                                            color = EmeraldPrimary,
-                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                                        )
-                                    }
+                                    Madrassa3dBadge(
+                                        text = "Roll #${student.rollNo}",
+                                        containerColor = Color(0xFFE5C07B).copy(alpha = 0.22f),
+                                        contentColor = Color(0xFFFFF0C2),
+                                        borderColor = Color(0xFFE5C07B).copy(alpha = 0.6f)
+                                    )
                                 }
 
-                                Spacer(modifier = Modifier.height(2.dp))
+                                Spacer(modifier = Modifier.height(3.dp))
 
                                 Text(
                                     text = "ولدیت: ${student.fatherName} • ${student.department} (${student.section})",
                                     fontSize = 12.sp,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    color = Color.White.copy(alpha = 0.8f)
                                 )
 
-                                Spacer(modifier = Modifier.height(4.dp))
+                                Spacer(modifier = Modifier.height(5.dp))
 
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically,
                                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                                 ) {
+                                    val (badgeBg, badgeText, badgeColor) = when (attStatus) {
+                                        "PRESENT" -> Triple(Color(0xFF2E7D32).copy(alpha = 0.35f), "✓ حاضر (Present)", Color(0xFF81C784))
+                                        "ABSENT" -> Triple(Color(0xFFC62828).copy(alpha = 0.35f), "✗ غیر حاضر (Absent)", Color(0xFFEF9A9A))
+                                        "LATE" -> Triple(Color(0xFFE65100).copy(alpha = 0.35f), "⏰ تاخیر (Late)", Color(0xFFFFCC80))
+                                        else -> Triple(Color.White.copy(alpha = 0.1f), "حاضری باقی (Unmarked)", Color.White.copy(alpha = 0.7f))
+                                    }
+
                                     Surface(
-                                        shape = RoundedCornerShape(4.dp),
-                                        color = when (attStatus) {
-                                            "PRESENT" -> Color(0xFFE8F5E9)
-                                            "ABSENT" -> Color(0xFFFFEBEE)
-                                            "LATE" -> Color(0xFFFFF3E0)
-                                            else -> Color(0xFFF5F5F5)
-                                        }
+                                        shape = RoundedCornerShape(6.dp),
+                                        color = badgeBg,
+                                        border = BorderStroke(1.dp, badgeColor.copy(alpha = 0.5f))
                                     ) {
                                         Text(
-                                            text = when (attStatus) {
-                                                "PRESENT" -> "✓ حاضر (Present)"
-                                                "ABSENT" -> "✗ غیر حاضر (Absent)"
-                                                "LATE" -> "⏰ تاخیر (Late)"
-                                                else -> "حاضری باقی (Unmarked)"
-                                            },
+                                            text = badgeText,
                                             fontSize = 10.5.sp,
                                             fontWeight = FontWeight.Bold,
-                                            color = when (attStatus) {
-                                                "PRESENT" -> Color(0xFF2E7D32)
-                                                "ABSENT" -> Color(0xFFC62828)
-                                                "LATE" -> Color(0xFFE65100)
-                                                else -> Color.Gray
-                                            },
+                                            color = badgeColor,
                                             modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                                         )
                                     }
@@ -445,7 +449,7 @@ fun DashboardScreen(
                                     Text(
                                         text = "نصاب: ${student.paray}",
                                         fontSize = 11.sp,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        color = Color(0xFFE5C07B).copy(alpha = 0.9f)
                                     )
                                 }
                             }
@@ -459,33 +463,49 @@ fun DashboardScreen(
                             horizontalArrangement = Arrangement.End,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            OutlinedButton(
-                                onClick = onNavigateToProgress,
+                            Surface(
                                 shape = RoundedCornerShape(8.dp),
-                                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
-                                colors = ButtonDefaults.outlinedButtonColors(contentColor = EmeraldPrimary)
+                                color = Color.White.copy(alpha = 0.08f),
+                                border = BorderStroke(1.dp, Color(0xFFE5C07B).copy(alpha = 0.4f)),
+                                modifier = Modifier.clickable { onNavigateToProgress() }
                             ) {
-                                Icon(Icons.Default.MenuBook, contentDescription = null, modifier = Modifier.size(15.dp))
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text(text = "جائزہ درج کریں (Progress)", fontSize = 11.sp)
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(Icons.Default.MenuBook, contentDescription = null, tint = Color(0xFFE5C07B), modifier = Modifier.size(14.dp))
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text(text = "جائزہ درج کریں (Progress)", fontSize = 11.sp, color = Color(0xFFFFF0C2), fontWeight = FontWeight.SemiBold)
+                                }
                             }
 
                             Spacer(modifier = Modifier.width(8.dp))
 
-                            Button(
-                                onClick = onNavigateToStudents,
+                            Surface(
                                 shape = RoundedCornerShape(8.dp),
-                                colors = ButtonDefaults.buttonColors(containerColor = EmeraldPrimary),
-                                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp)
+                                color = Color(0xFFE5C07B),
+                                modifier = Modifier.clickable { onNavigateToStudents() }
                             ) {
-                                Icon(Icons.Default.Person, contentDescription = null, modifier = Modifier.size(15.dp))
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text(text = "پروفائل (Profile)", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(Icons.Default.Person, contentDescription = null, tint = Color(0xFF042418), modifier = Modifier.size(14.dp))
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text(text = "پروفائل (Profile)", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color(0xFF042418))
+                                }
                             }
                         }
                     }
                 }
             }
         }
+    }
+
+    if (showSyncDialog) {
+        SyncDetailsDialog(
+            viewModel = viewModel,
+            onDismiss = { showSyncDialog = false }
+        )
     }
 }

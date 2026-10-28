@@ -404,11 +404,11 @@ fun DepartmentEnrollmentBarChart(
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
-                text = "Departmental Enrollment",
+                text = "Class Enrollment (درجات کے طلبہ)",
                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
             )
             Text(
-                text = "Distribution across Islamic educational programs",
+                text = "Distribution across classes & Islamic courses",
                 style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
             )
 

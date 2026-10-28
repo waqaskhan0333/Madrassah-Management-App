@@ -128,6 +128,12 @@ interface AttendanceDao {
 
     @Query("DELETE FROM attendance")
     suspend fun clearAllAttendance()
+
+    @Query("DELETE FROM attendance WHERE date < :cutoffDate")
+    suspend fun deleteAttendanceOlderThan(cutoffDate: String): Int
+
+    @Query("SELECT COUNT(*) FROM attendance WHERE date < :cutoffDate")
+    suspend fun countAttendanceOlderThan(cutoffDate: String): Int
 }
 
 @Dao
@@ -227,6 +233,18 @@ interface ProgressDao {
 
     @Query("SELECT * FROM tajweed_progress")
     suspend fun getAllTajweedDirect(): List<TajweedProgress>
+
+    @Query("DELETE FROM hifz_progress WHERE date < :cutoffDate")
+    suspend fun deleteHifzOlderThan(cutoffDate: String): Int
+
+    @Query("DELETE FROM nazra_progress WHERE date < :cutoffDate")
+    suspend fun deleteNazraOlderThan(cutoffDate: String): Int
+
+    @Query("DELETE FROM qaida_progress WHERE date < :cutoffDate")
+    suspend fun deleteQaidaOlderThan(cutoffDate: String): Int
+
+    @Query("DELETE FROM tajweed_progress WHERE date < :cutoffDate")
+    suspend fun deleteTajweedOlderThan(cutoffDate: String): Int
 }
 
 @Dao
@@ -336,6 +354,12 @@ interface FeeDao {
     @Query("DELETE FROM fee_vouchers")
     suspend fun clearAllVouchers()
 
+    @Query("DELETE FROM fee_vouchers WHERE dueDate < :cutoffDate AND status = 'PAID'")
+    suspend fun deletePaidVouchersOlderThan(cutoffDate: String): Int
+
+    @Query("SELECT COUNT(*) FROM fee_vouchers WHERE dueDate < :cutoffDate AND status = 'PAID'")
+    suspend fun countPaidVouchersOlderThan(cutoffDate: String): Int
+
     @Query("SELECT * FROM payments WHERE voucherId = :voucherId ORDER BY id DESC")
     fun getPaymentsForVoucher(voucherId: Long): Flow<List<PaymentRecord>>
 
@@ -350,6 +374,9 @@ interface FeeDao {
 
     @Query("SELECT * FROM payments")
     suspend fun getAllPaymentsDirect(): List<PaymentRecord>
+
+    @Query("DELETE FROM payments WHERE id = :id")
+    suspend fun deletePayment(id: Long)
 
     @Query("DELETE FROM payments")
     suspend fun clearAllPayments()

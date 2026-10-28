@@ -179,11 +179,11 @@ object PdfReportGenerator {
             textY += 18f
             canvas.drawText("Father Name:", 150f, textY, boldPaint)
             canvas.drawText(student.fatherName, 220f, textY, textPaint)
-            canvas.drawText("Department:", 370f, textY, boldPaint)
+            canvas.drawText("Class / درجہ:", 370f, textY, boldPaint)
             canvas.drawText(student.department, 440f, textY, textPaint)
 
             textY += 18f
-            canvas.drawText("Class / Section:", 150f, textY, boldPaint)
+            canvas.drawText("Section:", 150f, textY, boldPaint)
             canvas.drawText(student.section, 220f, textY, textPaint)
             canvas.drawText("Campus:", 370f, textY, boldPaint)
             canvas.drawText(student.campus, 440f, textY, textPaint)
@@ -337,7 +337,7 @@ object PdfReportGenerator {
             y += 16f
             canvas.drawText("EXAMINATION MARKSHEET & RESULT LIST (امتحانی لسٹ)", 40f, y, boldPaint)
             y += 14f
-            canvas.drawText("Exam: ${exam.title}  •  Department: ${exam.department}  •  Section: ${exam.section}  •  Date: ${exam.date}", 40f, y, textPaint)
+            canvas.drawText("Exam: ${exam.title}  •  Class: ${exam.department}  •  Section: ${exam.section}  •  Date: ${exam.date}", 40f, y, textPaint)
             y += 12f
             canvas.drawLine(40f, y, 555f, y, linePaint)
             y += 16f
@@ -365,12 +365,12 @@ object PdfReportGenerator {
                 canvas.drawRect(40f, y, 555f, y + 18f, Paint().apply { color = rowBg })
 
                 val res = examResultsMap[st.id]
-                val q1 = res?.question1?.toInt() ?: 22
-                val q2 = res?.question2?.toInt() ?: 23
-                val q3 = res?.question3?.toInt() ?: 24
-                val taj = res?.talaffuz?.toInt() ?: 23
-                val tot = res?.kulNumber?.toInt() ?: (q1 + q2 + q3 + taj)
-                val kaif = res?.kaifiyat ?: "ممتاز"
+                val q1 = if (res != null) "${res.question1.toInt()}" else "-"
+                val q2 = if (res != null) "${res.question2.toInt()}" else "-"
+                val q3 = if (res != null) "${res.question3.toInt()}" else "-"
+                val taj = if (res != null) "${res.talaffuz.toInt()}" else "-"
+                val tot = if (res != null) "${res.kulNumber.toInt()}" else "-"
+                val kaif = if (res != null) (res.kaifiyat.ifBlank { res.grade }) else "غیر درج"
 
                 canvas.drawText("${index + 1}", 45f, y + 13f, textPaint)
                 canvas.drawText(st.rollNo, 65f, y + 13f, textPaint)
@@ -763,7 +763,7 @@ object PdfReportGenerator {
             canvas.drawRect(40f, y, 555f, y + 18f, emeraldBarPaint)
             canvas.drawText("Name", 45f, y + 12f, whiteText)
             canvas.drawText("Qualification", 180f, y + 12f, whiteText)
-            canvas.drawText("Assigned Department", 340f, y + 12f, whiteText)
+            canvas.drawText("Assigned Class", 340f, y + 12f, whiteText)
             canvas.drawText("Contact", 460f, y + 12f, whiteText)
             y += 18f
 

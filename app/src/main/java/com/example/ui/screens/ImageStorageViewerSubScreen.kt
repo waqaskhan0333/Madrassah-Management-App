@@ -274,7 +274,7 @@ fun ImageStorageViewerSubScreen(
                         OutlinedTextField(
                             value = studentSearchQuery,
                             onValueChange = { studentSearchQuery = it },
-                            placeholder = { Text("Search student name, roll number, or department...", fontSize = 12.sp) },
+                            placeholder = { Text("Search student name, roll number, or class (کلاس)...", fontSize = 12.sp) },
                             leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = EmeraldPrimary, modifier = Modifier.size(18.dp)) },
                             trailingIcon = {
                                 if (studentSearchQuery.isNotBlank()) {

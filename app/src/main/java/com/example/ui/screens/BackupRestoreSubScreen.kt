@@ -73,6 +73,19 @@ fun BackupRestoreSubScreen(
     var restoredSummary by remember { mutableStateOf<BackupSummary?>(null) }
     var showSuccessDialog by remember { mutableStateOf(false) }
 
+    // Dedicated Student & Teacher Import State
+    var pendingStudentImportContent by remember { mutableStateOf<String?>(null) }
+    var showStudentImportDialog by remember { mutableStateOf(false) }
+    var pendingTeacherImportContent by remember { mutableStateOf<String?>(null) }
+    var showTeacherImportDialog by remember { mutableStateOf(false) }
+
+    // Database Purge & Reset State
+    var showPurgeConfirmDialog by remember { mutableStateOf(false) }
+    var selectedPurgeMonths by remember { mutableIntStateOf(6) }
+    var showResetConfirmDialog by remember { mutableStateOf(false) }
+    var resetConfirmationInput by remember { mutableStateOf("") }
+    var reseedAfterReset by remember { mutableStateOf(true) }
+
     // Inspection Dialog State
     var showInspectDataDialog by remember { mutableStateOf(false) }
 
@@ -115,6 +128,40 @@ fun BackupRestoreSubScreen(
                 Toast.makeText(context, "Failed to read file: ${e.message}", Toast.LENGTH_SHORT).show()
             } finally {
                 isProcessing = false
+            }
+        }
+    }
+
+    // SAF File Picker for Students JSON Import
+    val importStudentsLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri: Uri? ->
+        if (uri != null) {
+            try {
+                val content = viewModel.backupManager.readFromUri(context, uri)
+                if (content.isNotBlank()) {
+                    pendingStudentImportContent = content
+                    showStudentImportDialog = true
+                }
+            } catch (e: Exception) {
+                Toast.makeText(context, "Failed to read file: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    // SAF File Picker for Teachers JSON Import
+    val importTeachersLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri: Uri? ->
+        if (uri != null) {
+            try {
+                val content = viewModel.backupManager.readFromUri(context, uri)
+                if (content.isNotBlank()) {
+                    pendingTeacherImportContent = content
+                    showTeacherImportDialog = true
+                }
+            } catch (e: Exception) {
+                Toast.makeText(context, "Failed to read file: ${e.message}", Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -665,6 +712,320 @@ fun BackupRestoreSubScreen(
                     }
                 }
             }
+
+            // 5. Portable Students & Teachers JSON Backup (Safety Backup)
+            item {
+                Spacer(modifier = Modifier.height(6.dp))
+                Text(
+                    text = "Students & Teachers Local JSON Backup (طلباء و اساتذہ بیک اپ)",
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                )
+            }
+
+            item {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(14.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 1.5.dp)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.PeopleAlt, contentDescription = null, tint = EmeraldPrimary, modifier = Modifier.size(24.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Column {
+                                Text(
+                                    text = "Portable Student & Faculty JSON",
+                                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                                )
+                                Text(
+                                    text = "طلباء اور اساتذہ کا آف لائن حفاظتی بیک اپ",
+                                    fontSize = 11.sp,
+                                    color = EmeraldPrimary
+                                )
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Text(
+                            text = "Export or import standalone rosters for students (${students.size}) and teachers (${teachers.size}) as clean local JSON files with embedded photos and bio data.",
+                            style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        )
+                        Spacer(modifier = Modifier.height(14.dp))
+
+                        // Student Actions
+                        Text(text = "Students Roster (${students.size} Enrolled):", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Button(
+                                onClick = {
+                                    isProcessing = true
+                                    viewModel.exportStudentsJson { json ->
+                                        isProcessing = false
+                                        pendingExportContent = json
+                                        pendingExportType = "STUDENTS_JSON"
+                                        val timeStr = SimpleDateFormat("yyyyMMdd_HHmm", Locale.getDefault()).format(Date())
+                                        exportFileLauncher.launch("madrassa_students_$timeStr.json")
+                                    }
+                                },
+                                modifier = Modifier.weight(1f),
+                                colors = ButtonDefaults.buttonColors(containerColor = EmeraldPrimary),
+                                shape = RoundedCornerShape(8.dp)
+                            ) {
+                                Icon(Icons.Default.Download, contentDescription = null, modifier = Modifier.size(15.dp))
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text("Save Students", fontSize = 11.5.sp)
+                            }
+
+                            OutlinedButton(
+                                onClick = {
+                                    isProcessing = true
+                                    viewModel.exportStudentsJson { json ->
+                                        isProcessing = false
+                                        val timeStr = SimpleDateFormat("yyyyMMdd_HHmm", Locale.getDefault()).format(Date())
+                                        viewModel.backupManager.shareBackupFile(
+                                            context = context,
+                                            content = json,
+                                            filename = "madrassa_students_$timeStr.json",
+                                            mimeType = "application/json"
+                                        )
+                                    }
+                                },
+                                modifier = Modifier.weight(1f),
+                                shape = RoundedCornerShape(8.dp)
+                            ) {
+                                Icon(Icons.Default.Share, contentDescription = null, modifier = Modifier.size(15.dp))
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text("Share", fontSize = 11.5.sp)
+                            }
+
+                            FilledTonalButton(
+                                onClick = {
+                                    importStudentsLauncher.launch(arrayOf("*/*", "application/json"))
+                                },
+                                modifier = Modifier.weight(1f),
+                                shape = RoundedCornerShape(8.dp)
+                            ) {
+                                Icon(Icons.Default.Upload, contentDescription = null, modifier = Modifier.size(15.dp))
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text("Import", fontSize = 11.5.sp)
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(12.dp))
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                        Spacer(modifier = Modifier.height(10.dp))
+
+                        // Teacher Actions
+                        Text(text = "Faculty & Teachers (${teachers.size} Teachers):", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Button(
+                                onClick = {
+                                    isProcessing = true
+                                    viewModel.exportTeachersJson { json ->
+                                        isProcessing = false
+                                        pendingExportContent = json
+                                        pendingExportType = "TEACHERS_JSON"
+                                        val timeStr = SimpleDateFormat("yyyyMMdd_HHmm", Locale.getDefault()).format(Date())
+                                        exportFileLauncher.launch("madrassa_teachers_$timeStr.json")
+                                    }
+                                },
+                                modifier = Modifier.weight(1f),
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1976D2)),
+                                shape = RoundedCornerShape(8.dp)
+                            ) {
+                                Icon(Icons.Default.Download, contentDescription = null, modifier = Modifier.size(15.dp))
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text("Save Teachers", fontSize = 11.5.sp)
+                            }
+
+                            OutlinedButton(
+                                onClick = {
+                                    isProcessing = true
+                                    viewModel.exportTeachersJson { json ->
+                                        isProcessing = false
+                                        val timeStr = SimpleDateFormat("yyyyMMdd_HHmm", Locale.getDefault()).format(Date())
+                                        viewModel.backupManager.shareBackupFile(
+                                            context = context,
+                                            content = json,
+                                            filename = "madrassa_teachers_$timeStr.json",
+                                            mimeType = "application/json"
+                                        )
+                                    }
+                                },
+                                modifier = Modifier.weight(1f),
+                                shape = RoundedCornerShape(8.dp)
+                            ) {
+                                Icon(Icons.Default.Share, contentDescription = null, modifier = Modifier.size(15.dp))
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text("Share", fontSize = 11.5.sp)
+                            }
+
+                            FilledTonalButton(
+                                onClick = {
+                                    importTeachersLauncher.launch(arrayOf("*/*", "application/json"))
+                                },
+                                modifier = Modifier.weight(1f),
+                                shape = RoundedCornerShape(8.dp)
+                            ) {
+                                Icon(Icons.Default.Upload, contentDescription = null, modifier = Modifier.size(15.dp))
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text("Import", fontSize = 11.5.sp)
+                            }
+                        }
+                    }
+                }
+            }
+
+            // 6. Database Cleanup & Old Records Purge
+            item {
+                Spacer(modifier = Modifier.height(6.dp))
+                Text(
+                    text = "Database Maintenance & Clean Up (ڈیٹا بیس کی صفائی)",
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                )
+            }
+
+            // Purge Historical Records Card
+            item {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(14.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 1.5.dp)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.CleaningServices, contentDescription = null, tint = Color(0xFFE65100), modifier = Modifier.size(24.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Column {
+                                Text(
+                                    text = "Purge Old Historical Records",
+                                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                                )
+                                Text(
+                                    text = "پرانے ریکارڈز، حاضری اور فیس کی صفائی",
+                                    fontSize = 11.sp,
+                                    color = Color(0xFFE65100)
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Text(
+                            text = "Cleans old attendance logs, settled fee vouchers, and past sabaq entries to make the database fast and lightweight. Enrolled student profiles and teachers will NOT be removed.",
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+
+                        Spacer(modifier = Modifier.height(10.dp))
+                        Text(text = "Select Age Cutoff:", fontSize = 11.5.sp, fontWeight = FontWeight.Bold)
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            FilterChip(
+                                selected = selectedPurgeMonths == 3,
+                                onClick = { selectedPurgeMonths = 3 },
+                                label = { Text("Older than 3 Months", fontSize = 11.sp) }
+                            )
+                            FilterChip(
+                                selected = selectedPurgeMonths == 6,
+                                onClick = { selectedPurgeMonths = 6 },
+                                label = { Text("Older than 6 Months", fontSize = 11.sp) }
+                            )
+                            FilterChip(
+                                selected = selectedPurgeMonths == 12,
+                                onClick = { selectedPurgeMonths = 12 },
+                                label = { Text("Older than 1 Year", fontSize = 11.sp) }
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        Button(
+                            onClick = { showPurgeConfirmDialog = true },
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE65100)),
+                            shape = RoundedCornerShape(10.dp)
+                        ) {
+                            Icon(Icons.Default.DeleteSweep, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("Purge Records Older Than $selectedPurgeMonths Months", fontWeight = FontWeight.Bold, fontSize = 12.5.sp)
+                        }
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        OutlinedButton(
+                            onClick = {
+                                viewModel.clearAllExamResults { count ->
+                                    Toast.makeText(context, "Cleaned $count sample/test exam marks!", Toast.LENGTH_SHORT).show()
+                                }
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFE65100)),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFE65100)),
+                            shape = RoundedCornerShape(10.dp)
+                        ) {
+                            Icon(Icons.Default.School, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("Clear Sample / Test Exam Marks (امتحانی ریکارڈ صاف کریں)", fontWeight = FontWeight.Bold, fontSize = 11.5.sp)
+                        }
+                    }
+                }
+            }
+
+            // Factory Reset Danger Card
+            item {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(14.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFFFFEBEE)),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFEF9A9A))
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.WarningAmber, contentDescription = null, tint = Color(0xFFC62828), modifier = Modifier.size(24.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Column {
+                                Text(
+                                    text = "Reset All Database (مکمل ڈیٹا بیس ری سیٹ)",
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 14.5.sp,
+                                    color = Color(0xFFC62828)
+                                )
+                                Text(
+                                    text = "Danger Zone • تمام ڈیٹا ڈیلیٹ کریں",
+                                    fontSize = 11.sp,
+                                    color = Color(0xFFC62828)
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Text(
+                            text = "Deletes all students, teachers, attendance records, exam results, and fee vouchers from local storage. Requires typing 'CLEAR' to confirm.",
+                            fontSize = 11.5.sp,
+                            color = Color(0xFF5D1010)
+                        )
+
+                        Spacer(modifier = Modifier.height(10.dp))
+
+                        OutlinedButton(
+                            onClick = {
+                                resetConfirmationInput = ""
+                                showResetConfirmDialog = true
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFC62828)),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFC62828)),
+                            shape = RoundedCornerShape(10.dp)
+                        ) {
+                            Icon(Icons.Default.DeleteForever, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("Clear All Database (فیکٹری ری سیٹ)", fontWeight = FontWeight.Bold, fontSize = 12.5.sp)
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -1177,6 +1538,276 @@ fun BackupRestoreSubScreen(
                 }
             }
         }
+    }
+
+    // 1. Student Import Dialog
+    if (showStudentImportDialog && pendingStudentImportContent != null) {
+        val content = pendingStudentImportContent!!
+        AlertDialog(
+            onDismissRequest = {
+                showStudentImportDialog = false
+                pendingStudentImportContent = null
+            },
+            icon = { Icon(Icons.Default.PeopleAlt, contentDescription = null, tint = EmeraldPrimary, modifier = Modifier.size(36.dp)) },
+            title = { Text(text = "Import Students JSON?") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Text(text = "Valid Students JSON file selected.", fontWeight = FontWeight.Bold)
+                    Text(
+                        text = "Choose how to import students into the local SQLite database:\n• Replace: Clears current student roster and installs imported records.\n• Merge / Append: Adds new students or updates existing roll numbers without deleting others.",
+                        fontSize = 12.5.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showStudentImportDialog = false
+                        viewModel.importStudentsJson(
+                            json = content,
+                            replaceExisting = false,
+                            onSuccess = { count ->
+                                Toast.makeText(context, "Successfully imported $count students!", Toast.LENGTH_LONG).show()
+                                pendingStudentImportContent = null
+                            },
+                            onError = { err ->
+                                Toast.makeText(context, "Import failed: $err", Toast.LENGTH_LONG).show()
+                                pendingStudentImportContent = null
+                            }
+                        )
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = EmeraldPrimary)
+                ) {
+                    Text("Merge / Append")
+                }
+            },
+            dismissButton = {
+                Row {
+                    TextButton(
+                        onClick = {
+                            showStudentImportDialog = false
+                            viewModel.importStudentsJson(
+                                json = content,
+                                replaceExisting = true,
+                                onSuccess = { count ->
+                                    Toast.makeText(context, "Replaced student roster with $count students!", Toast.LENGTH_LONG).show()
+                                    pendingStudentImportContent = null
+                                },
+                                onError = { err ->
+                                    Toast.makeText(context, "Import failed: $err", Toast.LENGTH_LONG).show()
+                                    pendingStudentImportContent = null
+                                }
+                            )
+                        }
+                    ) {
+                        Text("Replace All", color = Color(0xFFC62828))
+                    }
+                    TextButton(
+                        onClick = {
+                            showStudentImportDialog = false
+                            pendingStudentImportContent = null
+                        }
+                    ) {
+                        Text("Cancel")
+                    }
+                }
+            }
+        )
+    }
+
+    // 2. Teacher Import Dialog
+    if (showTeacherImportDialog && pendingTeacherImportContent != null) {
+        val content = pendingTeacherImportContent!!
+        AlertDialog(
+            onDismissRequest = {
+                showTeacherImportDialog = false
+                pendingTeacherImportContent = null
+            },
+            icon = { Icon(Icons.Default.School, contentDescription = null, tint = Color(0xFF1976D2), modifier = Modifier.size(36.dp)) },
+            title = { Text(text = "Import Teachers JSON?") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Text(text = "Valid Teachers JSON file selected.", fontWeight = FontWeight.Bold)
+                    Text(
+                        text = "Choose how to import faculty members into local SQLite storage:\n• Merge: Adds new teachers while preserving existing ones.\n• Replace: Replaces faculty records with the file content.",
+                        fontSize = 12.5.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showTeacherImportDialog = false
+                        viewModel.importTeachersJson(
+                            json = content,
+                            replaceExisting = false,
+                            onSuccess = { count ->
+                                Toast.makeText(context, "Successfully imported $count teachers!", Toast.LENGTH_LONG).show()
+                                pendingTeacherImportContent = null
+                            },
+                            onError = { err ->
+                                Toast.makeText(context, "Import failed: $err", Toast.LENGTH_LONG).show()
+                                pendingTeacherImportContent = null
+                            }
+                        )
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1976D2))
+                ) {
+                    Text("Merge / Append")
+                }
+            },
+            dismissButton = {
+                Row {
+                    TextButton(
+                        onClick = {
+                            showTeacherImportDialog = false
+                            viewModel.importTeachersJson(
+                                json = content,
+                                replaceExisting = true,
+                                onSuccess = { count ->
+                                    Toast.makeText(context, "Replaced faculty with $count teachers!", Toast.LENGTH_LONG).show()
+                                    pendingTeacherImportContent = null
+                                },
+                                onError = { err ->
+                                    Toast.makeText(context, "Import failed: $err", Toast.LENGTH_LONG).show()
+                                    pendingTeacherImportContent = null
+                                }
+                            )
+                        }
+                    ) {
+                        Text("Replace All", color = Color(0xFFC62828))
+                    }
+                    TextButton(
+                        onClick = {
+                            showTeacherImportDialog = false
+                            pendingTeacherImportContent = null
+                        }
+                    ) {
+                        Text("Cancel")
+                    }
+                }
+            }
+        )
+    }
+
+    // 3. Purge Historical Records Dialog
+    if (showPurgeConfirmDialog) {
+        val cal = java.util.Calendar.getInstance()
+        cal.add(java.util.Calendar.MONTH, -selectedPurgeMonths)
+        val cutoffDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(cal.time)
+
+        AlertDialog(
+            onDismissRequest = { showPurgeConfirmDialog = false },
+            icon = { Icon(Icons.Default.CleaningServices, contentDescription = null, tint = Color(0xFFE65100), modifier = Modifier.size(36.dp)) },
+            title = { Text(text = "Confirm Historical Data Purge") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Text(
+                        text = "Are you sure you want to clean old records?",
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = "This will permanently remove attendance logs, settled fee vouchers, and sabaq progress entries logged prior to $cutoffDate ($selectedPurgeMonths months ago).\n\nActive student profiles, teachers, and current records will remain untouched.",
+                        fontSize = 12.5.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showPurgeConfirmDialog = false
+                        viewModel.purgeOldDatabaseRecords(
+                            cutoffDate = cutoffDate,
+                            onSuccess = { deleted ->
+                                Toast.makeText(context, "Database cleaned: $deleted old records purged!", Toast.LENGTH_LONG).show()
+                            },
+                            onError = { err ->
+                                Toast.makeText(context, "Purge error: $err", Toast.LENGTH_LONG).show()
+                            }
+                        )
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE65100))
+                ) {
+                    Text("Clean Records Now")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showPurgeConfirmDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
+    // 4. Complete Database Reset Dialog
+    if (showResetConfirmDialog) {
+        AlertDialog(
+            onDismissRequest = { showResetConfirmDialog = false },
+            icon = { Icon(Icons.Default.Warning, contentDescription = null, tint = Color(0xFFC62828), modifier = Modifier.size(40.dp)) },
+            title = { Text(text = "Factory Reset Entire Database?", color = Color(0xFFC62828)) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Text(
+                        text = "This action will WIPE ALL database records including students, attendance, exams, fees, and teachers from this device.",
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFFC62828),
+                        fontSize = 13.sp
+                    )
+                    Text(
+                        text = "To confirm, please type 'CLEAR' in capital letters below:",
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    OutlinedTextField(
+                        value = resetConfirmationInput,
+                        onValueChange = { resetConfirmationInput = it },
+                        placeholder = { Text("Type CLEAR here") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Checkbox(
+                            checked = reseedAfterReset,
+                            onCheckedChange = { reseedAfterReset = it }
+                        )
+                        Text(text = "Re-seed starter Madrassa data after reset", fontSize = 12.sp)
+                    }
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        if (resetConfirmationInput.trim().equals("CLEAR", ignoreCase = false)) {
+                            showResetConfirmDialog = false
+                            viewModel.resetEntireDatabase(
+                                reseed = reseedAfterReset,
+                                onSuccess = {
+                                    Toast.makeText(context, "Database reset complete!", Toast.LENGTH_LONG).show()
+                                },
+                                onError = { err ->
+                                    Toast.makeText(context, "Reset failed: $err", Toast.LENGTH_LONG).show()
+                                }
+                            )
+                        } else {
+                            Toast.makeText(context, "Confirmation text must be 'CLEAR'!", Toast.LENGTH_SHORT).show()
+                        }
+                    },
+                    enabled = resetConfirmationInput.trim() == "CLEAR",
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFC62828))
+                ) {
+                    Text("Wipe & Reset")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showResetConfirmDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
     }
 }
 

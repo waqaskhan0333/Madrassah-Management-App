@@ -367,6 +367,7 @@ class MadrassaViewModel(application: Application) : AndroidViewModel(application
                 } else {
                     repository.updateStudent(student)
                 }
+                triggerAutoSync()
                 withContext(Dispatchers.Main) {
                     onSuccess()
                 }
@@ -382,24 +383,28 @@ class MadrassaViewModel(application: Application) : AndroidViewModel(application
     fun updateStudent(student: Student) {
         viewModelScope.launch(Dispatchers.IO) {
             repository.updateStudent(student)
+            triggerAutoSync()
         }
     }
 
     fun softDeleteStudent(id: Long) {
         viewModelScope.launch(Dispatchers.IO) {
             repository.softDeleteStudent(id)
+            triggerAutoSync()
         }
     }
 
     fun restoreStudent(id: Long) {
         viewModelScope.launch(Dispatchers.IO) {
             repository.restoreStudent(id)
+            triggerAutoSync()
         }
     }
 
     fun permanentlyDeleteStudent(id: Long) {
         viewModelScope.launch(Dispatchers.IO) {
             repository.permanentlyDeleteStudent(id)
+            triggerAutoSync()
         }
     }
 
@@ -411,18 +416,21 @@ class MadrassaViewModel(application: Application) : AndroidViewModel(application
             } else {
                 repository.insertTeacher(teacher)
             }
+            triggerAutoSync()
         }
     }
 
     fun softDeleteTeacher(id: Long) {
         viewModelScope.launch(Dispatchers.IO) {
             repository.softDeleteTeacher(id)
+            triggerAutoSync()
         }
     }
 
     fun restoreTeacher(id: Long) {
         viewModelScope.launch(Dispatchers.IO) {
             repository.restoreTeacher(id)
+            triggerAutoSync()
         }
     }
 
@@ -441,6 +449,7 @@ class MadrassaViewModel(application: Application) : AndroidViewModel(application
                 remarks = remarks
             )
             repository.markAttendance(record)
+            triggerAutoSync()
         }
     }
 
@@ -455,6 +464,7 @@ class MadrassaViewModel(application: Application) : AndroidViewModel(application
                 repository.getAllStudentsDirect().filter { !it.isDeleted && it.status == "ACTIVE" }.map { it.id }
             }
             repository.markAllStudentsPresent(selectedDate.value, ids)
+            triggerAutoSync()
         }
     }
 
@@ -466,6 +476,7 @@ class MadrassaViewModel(application: Application) : AndroidViewModel(application
                 teachers.value.filter { !it.isDeleted && it.status == "ACTIVE" }.map { it.id }
             }
             repository.markAllTeachersPresent(selectedDate.value, ids)
+            triggerAutoSync()
         }
     }
 
@@ -589,6 +600,7 @@ class MadrassaViewModel(application: Application) : AndroidViewModel(application
             val updatedVoucher = voucher.copy(paidAmount = newPaid, status = newStatus)
             repository.updateVoucher(updatedVoucher)
 
+            triggerAutoSync()
             withContext(Dispatchers.Main) {
                 onSuccess(payment)
             }
@@ -624,6 +636,7 @@ class MadrassaViewModel(application: Application) : AndroidViewModel(application
                 dueDate = dueDate
             )
             val id = repository.insertVoucher(voucher)
+            triggerAutoSync()
             withContext(Dispatchers.Main) {
                 onSuccess(voucher.copy(id = id))
             }
@@ -669,6 +682,12 @@ class MadrassaViewModel(application: Application) : AndroidViewModel(application
     fun deleteVoucher(id: Long) {
         viewModelScope.launch(Dispatchers.IO) {
             repository.deleteVoucher(id)
+        }
+    }
+
+    fun deletePayment(id: Long) {
+        viewModelScope.launch(Dispatchers.IO) {
+            repository.deletePayment(id)
         }
     }
 
@@ -734,6 +753,16 @@ class MadrassaViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
+    fun clearAllExamResults(onSuccess: (Int) -> Unit) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val all = repository.getAllExamResultsDirect()
+            all.forEach { repository.deleteExamResult(it.id) }
+            withContext(Dispatchers.Main) {
+                onSuccess(all.size)
+            }
+        }
+    }
+
     fun setAttendanceDate(date: String) {
         selectedDate.value = date
     }
@@ -742,6 +771,7 @@ class MadrassaViewModel(application: Application) : AndroidViewModel(application
     fun updateProfile(newProfile: MadrassaProfile) {
         viewModelScope.launch(Dispatchers.IO) {
             repository.updateProfile(newProfile)
+            triggerAutoSync()
         }
     }
 
@@ -881,6 +911,122 @@ class MadrassaViewModel(application: Application) : AndroidViewModel(application
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
                     onError(e.message ?: "Failed to execute SQL backup")
+                }
+            }
+        }
+    }
+
+    // Dedicated Student & Teacher JSON Export / Import
+    fun exportStudentsJson(onReady: (String) -> Unit) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val json = backupManager.exportStudentsToJson(context = getApplication())
+            withContext(Dispatchers.Main) {
+                onReady(json)
+            }
+        }
+    }
+
+    fun exportTeachersJson(onReady: (String) -> Unit) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val json = backupManager.exportTeachersToJson(context = getApplication())
+            withContext(Dispatchers.Main) {
+                onReady(json)
+            }
+        }
+    }
+
+    fun exportStudentsAndTeachersJson(onReady: (String) -> Unit) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val json = backupManager.exportStudentsAndTeachersToJson(context = getApplication())
+            withContext(Dispatchers.Main) {
+                onReady(json)
+            }
+        }
+    }
+
+    fun importStudentsJson(
+        json: String,
+        replaceExisting: Boolean,
+        onSuccess: (Int) -> Unit,
+        onError: (String) -> Unit
+    ) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val count = backupManager.importStudentsFromJson(
+                    json = json,
+                    context = getApplication(),
+                    replaceExisting = replaceExisting
+                )
+                triggerAutoSync()
+                withContext(Dispatchers.Main) {
+                    onSuccess(count)
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    onError(e.message ?: "Failed to import students JSON")
+                }
+            }
+        }
+    }
+
+    fun importTeachersJson(
+        json: String,
+        replaceExisting: Boolean,
+        onSuccess: (Int) -> Unit,
+        onError: (String) -> Unit
+    ) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val count = backupManager.importTeachersFromJson(
+                    json = json,
+                    context = getApplication(),
+                    replaceExisting = replaceExisting
+                )
+                triggerAutoSync()
+                withContext(Dispatchers.Main) {
+                    onSuccess(count)
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    onError(e.message ?: "Failed to import teachers JSON")
+                }
+            }
+        }
+    }
+
+    fun purgeOldDatabaseRecords(
+        cutoffDate: String,
+        onSuccess: (Int) -> Unit,
+        onError: (String) -> Unit
+    ) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val deleted = backupManager.purgeOldRecords(cutoffDate)
+                withContext(Dispatchers.Main) {
+                    onSuccess(deleted)
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    onError(e.message ?: "Failed to purge old records")
+                }
+            }
+        }
+    }
+
+    fun resetEntireDatabase(
+        reseed: Boolean,
+        onSuccess: () -> Unit,
+        onError: (String) -> Unit
+    ) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                backupManager.resetDatabase(reseed = reseed)
+                withContext(Dispatchers.Main) {
+                    onSuccess()
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    onError(e.message ?: "Failed to reset database")
                 }
             }
         }

@@ -19,7 +19,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.border
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -27,6 +29,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import coil.compose.AsyncImage
 import com.example.data.model.FeeVoucher
 import com.example.data.model.PaymentRecord
@@ -36,6 +40,7 @@ import com.example.ui.components.GenerateInvoiceDialog
 import com.example.ui.components.HifzProgressRechartsTracker
 import com.example.ui.components.IdCardDialog
 import com.example.ui.components.InvoiceSlipDialog
+import com.example.ui.components.Madrassa3dCard
 import com.example.ui.components.PaymentDialog
 import com.example.ui.components.ReceiptDialog
 import com.example.ui.components.StatusChip
@@ -65,6 +70,7 @@ fun StudentDetailScreen(
     var selectedReceiptToView by remember { mutableStateOf<PaymentRecord?>(null) }
     var showIdCardDialog by remember { mutableStateOf(false) }
     var showDmcDialog by remember { mutableStateOf(false) }
+    var showPhotoStorageDialog by remember { mutableStateOf(false) }
 
     var activeStudentId by remember { mutableLongStateOf(student.id) }
     val profile by viewModel.profile.collectAsState()
@@ -178,14 +184,13 @@ fun StudentDetailScreen(
                 }
             }
 
-            // Profile Card Header
-            Card(
+            // Profile Card Header (3D luxury card with metallic gold rim and orb)
+            Madrassa3dCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 6.dp),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                shape = RoundedCornerShape(18.dp),
+                elevation = 6.dp
             ) {
                 Column(
                     modifier = Modifier
@@ -195,9 +200,11 @@ fun StudentDetailScreen(
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(76.dp)
+                            .size(80.dp)
                             .clip(CircleShape)
-                            .background(EmeraldPrimaryContainer),
+                            .background(Brush.radialGradient(listOf(Color(0xFF1B6B4F), Color(0xFF042418))))
+                            .border(2.dp, Color(0xFFE5C07B), CircleShape)
+                            .clickable { showPhotoStorageDialog = true },
                         contentAlignment = Alignment.Center
                     ) {
                         if (student.photoUri.isNotBlank()) {
@@ -212,8 +219,26 @@ fun StudentDetailScreen(
                                 text = student.name.firstOrNull()?.uppercase() ?: "S",
                                 style = MaterialTheme.typography.headlineMedium.copy(
                                     fontWeight = FontWeight.Bold,
-                                    color = EmeraldPrimary
+                                    color = Color(0xFFE5C07B)
                                 )
+                            )
+                        }
+
+                        // Small camera/vault icon badge in bottom corner
+                        Box(
+                            modifier = Modifier
+                                .align(Alignment.BottomEnd)
+                                .size(24.dp)
+                                .clip(CircleShape)
+                                .background(Color(0xFFD4AF37))
+                                .border(1.dp, Color(0xFF042418), CircleShape),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.FolderShared,
+                                contentDescription = "Manage Photo",
+                                tint = Color(0xFF042418),
+                                modifier = Modifier.size(13.dp)
                             )
                         }
                     }
@@ -221,22 +246,25 @@ fun StudentDetailScreen(
                     Spacer(modifier = Modifier.height(10.dp))
                     Text(
                         text = student.name,
-                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
                     )
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
                         text = "ID: ${student.rollNo}  |  Reg: 2025-001",
-                        style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        style = MaterialTheme.typography.bodySmall.copy(color = Color.White.copy(alpha = 0.8f))
                     )
                     Text(
-                        text = "Department: ${student.department}  |  ${student.section}",
+                        text = "Class: ${student.department}  |  ${student.section}",
                         style = MaterialTheme.typography.bodySmall.copy(
-                            color = EmeraldPrimary,
+                            color = Color(0xFFE5C07B),
                             fontWeight = FontWeight.Bold
                         )
                     )
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(14.dp))
 
                     // Contact & Action Shortcuts Row
                     Row(
@@ -248,13 +276,13 @@ fun StudentDetailScreen(
                                 val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:${student.guardianPhone}"))
                                 context.startActivity(intent)
                             },
-                            colors = ButtonDefaults.buttonColors(containerColor = EmeraldPrimary),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1B6B4F)),
                             shape = RoundedCornerShape(10.dp),
                             contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
                         ) {
-                            Icon(imageVector = Icons.Default.Call, contentDescription = "Call", modifier = Modifier.size(16.dp))
+                            Icon(imageVector = Icons.Default.Call, contentDescription = "Call", modifier = Modifier.size(16.dp), tint = Color.White)
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text(text = "Call", fontSize = 12.sp)
+                            Text(text = "Call", fontSize = 12.sp, color = Color.White)
                         }
 
                         Button(
@@ -277,24 +305,44 @@ fun StudentDetailScreen(
                             Text(text = "WhatsApp", color = Color.White, fontSize = 12.sp)
                         }
 
-                        OutlinedButton(
-                            onClick = { showDmcDialog = true },
+                        Button(
+                            onClick = { showPhotoStorageDialog = true },
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD4AF37)),
                             shape = RoundedCornerShape(10.dp),
                             contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp)
                         ) {
-                            Icon(Icons.Default.PictureAsPdf, contentDescription = null, modifier = Modifier.size(16.dp), tint = Color(0xFFD32F2F))
+                            Icon(Icons.Default.PhotoLibrary, contentDescription = "Photo Vault", modifier = Modifier.size(16.dp), tint = Color(0xFF042418))
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text(text = "DMC Card", fontSize = 11.5.sp)
+                            Text(text = "Photo Vault", fontSize = 11.5.sp, fontWeight = FontWeight.Bold, color = Color(0xFF042418))
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        OutlinedButton(
+                            onClick = { showDmcDialog = true },
+                            shape = RoundedCornerShape(10.dp),
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFE5C07B).copy(alpha = 0.5f))
+                        ) {
+                            Icon(Icons.Default.PictureAsPdf, contentDescription = null, modifier = Modifier.size(16.dp), tint = Color(0xFFFF8A80))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(text = "DMC Card", fontSize = 11.5.sp, color = Color.White)
                         }
 
                         OutlinedButton(
                             onClick = { showIdCardDialog = true },
                             shape = RoundedCornerShape(10.dp),
-                            contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp)
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFE5C07B).copy(alpha = 0.5f))
                         ) {
-                            Icon(Icons.Default.Badge, contentDescription = null, modifier = Modifier.size(16.dp), tint = EmeraldPrimary)
+                            Icon(Icons.Default.Badge, contentDescription = null, modifier = Modifier.size(16.dp), tint = Color(0xFFE5C07B))
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text(text = "ID Card", fontSize = 11.5.sp)
+                            Text(text = "ID Card", fontSize = 11.5.sp, color = Color(0xFFE5C07B))
                         }
                     }
                 }
@@ -448,13 +496,12 @@ fun StudentDetailScreen(
                     ) {
                         // DMC Header & Print Banner
                         item {
-                            Card(
+                            Madrassa3dCard(
                                 modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(14.dp),
-                                colors = CardDefaults.cardColors(containerColor = EmeraldPrimaryContainer.copy(alpha = 0.5f)),
-                                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFC8E6C9))
+                                shape = RoundedCornerShape(16.dp),
+                                elevation = 5.dp
                             ) {
-                                Column(modifier = Modifier.padding(14.dp)) {
+                                Column(modifier = Modifier.padding(16.dp)) {
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
                                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -464,30 +511,30 @@ fun StudentDetailScreen(
                                             Text(
                                                 text = "Detailed Marks Certificate (DMC)",
                                                 fontWeight = FontWeight.Bold,
-                                                fontSize = 14.sp,
-                                                color = EmeraldPrimary
+                                                fontSize = 15.sp,
+                                                color = Color.White
                                             )
                                             Text(
                                                 text = "امتحانی رزلٹ کارڈ • Official Evaluation Records",
                                                 fontSize = 11.sp,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                color = Color(0xFFE5C07B)
                                             )
                                         }
 
                                         Button(
                                             onClick = { showDmcDialog = true },
-                                            colors = ButtonDefaults.buttonColors(containerColor = EmeraldPrimary),
+                                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD4AF37)),
                                             shape = RoundedCornerShape(10.dp),
                                             contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
                                         ) {
-                                            Icon(Icons.Default.PictureAsPdf, contentDescription = null, modifier = Modifier.size(16.dp))
+                                            Icon(Icons.Default.PictureAsPdf, contentDescription = null, tint = Color(0xFF042418), modifier = Modifier.size(16.dp))
                                             Spacer(modifier = Modifier.width(4.dp))
-                                            Text(text = "View DMC Card", fontSize = 11.5.sp)
+                                            Text(text = "View DMC Card", fontSize = 11.5.sp, fontWeight = FontWeight.Bold, color = Color(0xFF042418))
                                         }
                                     }
 
                                     if (studentResults.isNotEmpty()) {
-                                        Spacer(modifier = Modifier.height(10.dp))
+                                        Spacer(modifier = Modifier.height(12.dp))
                                         val totalMarksObt = studentResults.sumOf { it.kulNumber.toInt() }
                                         val totalMax = studentResults.sumOf { if (it.totalMaxMarks > 0) it.totalMaxMarks.toInt() else 100 }
                                         val overallPct = if (totalMax > 0) ((totalMarksObt * 100) / totalMax) else 0
@@ -500,20 +547,24 @@ fun StudentDetailScreen(
                                         }
 
                                         Row(
-                                            modifier = Modifier.fillMaxWidth(),
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .background(Color(0xFF042418).copy(alpha = 0.6f), RoundedCornerShape(10.dp))
+                                                .border(1.dp, Color(0xFFE5C07B).copy(alpha = 0.25f), RoundedCornerShape(10.dp))
+                                                .padding(12.dp),
                                             horizontalArrangement = Arrangement.SpaceBetween
                                         ) {
                                             Column {
-                                                Text(text = "Total Obtained", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                                Text(text = "$totalMarksObt / $totalMax", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = EmeraldPrimary)
+                                                Text(text = "Total Obtained", fontSize = 11.sp, color = Color.White.copy(alpha = 0.75f))
+                                                Text(text = "$totalMarksObt / $totalMax", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = Color.White)
                                             }
                                             Column {
-                                                Text(text = "Percentage", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                                Text(text = "$overallPct%", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = Color(0xFF2E7D32))
+                                                Text(text = "Percentage", fontSize = 11.sp, color = Color.White.copy(alpha = 0.75f))
+                                                Text(text = "$overallPct%", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = Color(0xFF00E676))
                                             }
                                             Column(horizontalAlignment = Alignment.End) {
-                                                Text(text = "Final Position / Grade", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                                Text(text = overallGrade, fontWeight = FontWeight.Bold, fontSize = 14.sp, color = Color(0xFF1B8A4C))
+                                                Text(text = "Final Position / Grade", fontSize = 11.sp, color = Color.White.copy(alpha = 0.75f))
+                                                Text(text = overallGrade, fontWeight = FontWeight.Bold, fontSize = 14.sp, color = Color(0xFFE5C07B))
                                             }
                                         }
                                     }
@@ -1015,6 +1066,20 @@ fun StudentDetailScreen(
             viewModel = viewModel,
             onDismiss = { showDmcDialog = false }
         )
+    }
+
+    if (showPhotoStorageDialog) {
+        Dialog(
+            onDismissRequest = { showPhotoStorageDialog = false },
+            properties = DialogProperties(usePlatformDefaultWidth = false)
+        ) {
+            Surface(modifier = Modifier.fillMaxSize()) {
+                InternalPhotoManagerScreen(
+                    viewModel = viewModel,
+                    onBack = { showPhotoStorageDialog = false }
+                )
+            }
+        }
     }
 }
 

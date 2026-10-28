@@ -90,7 +90,7 @@ class FirebaseSyncManager(
         try {
             // 1. Sync Profile
             _syncState.value = _syncState.value.copy(currentEntity = "Madrasa Profile")
-            val localProfile = database.profileDao().getProfileDirect()
+            val localProfile = database.madrassaProfileDao().getProfileDirect()
             if (localProfile != null) {
                 val profileMap = hashMapOf<String, Any>(
                     "id" to localProfile.id,
@@ -175,7 +175,6 @@ class FirebaseSyncManager(
                     "role" to tc.role,
                     "assignedDepartment" to tc.assignedDepartment,
                     "assignedSections" to tc.assignedSections,
-                    "campus" to tc.campus,
                     "status" to tc.status,
                     "monthlySalary" to tc.monthlySalary,
                     "isDeleted" to tc.isDeleted,

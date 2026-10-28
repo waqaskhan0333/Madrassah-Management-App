@@ -3,7 +3,9 @@ package com.example.ui.screens
 import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -48,6 +50,7 @@ fun FeesScreen(
     var selectedReceiptToView by remember { mutableStateOf<PaymentRecord?>(null) }
     var selectedVoucherForSlip by remember { mutableStateOf<FeeVoucher?>(null) }
     var voucherToDelete by remember { mutableStateOf<FeeVoucher?>(null) }
+    var selectedStudentForAccountDetails by remember { mutableStateOf<Student?>(null) }
 
     var showGenerateInvoiceDialog by remember { mutableStateOf(false) }
     var showBulkInvoiceDialog by remember { mutableStateOf(false) }
@@ -55,7 +58,7 @@ fun FeesScreen(
     var preselectedStudentForInvoice by remember { mutableStateOf<Long?>(null) }
     var accountSearchQuery by remember { mutableStateOf("") }
     var accountStatusFilter by remember { mutableStateOf("ALL") }
-    var accountDeptFilter by remember { mutableStateOf("All Depts") }
+    var accountDeptFilter by remember { mutableStateOf("All Classes") }
     var accountCampusFilter by remember { mutableStateOf("All Campuses") }
 
     var invoiceSearchQuery by remember { mutableStateOf("") }
@@ -79,7 +82,7 @@ fun FeesScreen(
     val defaulters = vouchers.filter { it.status != "PAID" }
 
     val availableDepartments = remember(students) {
-        listOf("All Depts") + students.map { it.department.trim() }.filter { it.isNotBlank() }.distinct()
+        listOf("All Classes") + students.map { it.department.trim() }.filter { it.isNotBlank() }.distinct()
     }
     val availableCampuses = remember(students) {
         val camps = students.map { it.campus.trim() }.filter { it.isNotBlank() }.distinct()
@@ -103,7 +106,7 @@ fun FeesScreen(
                     st.fatherName.contains(accountSearchQuery, ignoreCase = true) ||
                     st.campus.contains(accountSearchQuery, ignoreCase = true)
 
-            val matchesDept = accountDeptFilter == "All Depts" || st.department.equals(accountDeptFilter, ignoreCase = true)
+            val matchesDept = accountDeptFilter == "All Classes" || st.department.equals(accountDeptFilter, ignoreCase = true)
             val matchesCampus = accountCampusFilter == "All Campuses" || st.campus.equals(accountCampusFilter, ignoreCase = true)
 
             val stVouchers = vouchers.filter { it.studentId == st.id }
@@ -144,12 +147,81 @@ fun FeesScreen(
                             Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                         }
                     },
+                    actions = {
+                        SyncStatusPill(viewModel = viewModel, modifier = Modifier.padding(end = 8.dp))
+                    },
                     colors = TopAppBarDefaults.topAppBarColors(
                         containerColor = EmeraldPrimary,
                         titleContentColor = Color.White,
                         navigationIconContentColor = Color.White
                     )
                 )
+            }
+        },
+        bottomBar = {
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .navigationBarsPadding(),
+                color = MaterialTheme.colorScheme.surface,
+                shadowElevation = 8.dp,
+                border = BorderStroke(0.5.dp, Color(0xFFE2E8F0))
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 14.dp, vertical = 10.dp),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Button(
+                        onClick = {
+                            val firstWithDues = students.firstOrNull { st ->
+                                val due = vouchers.filter { it.studentId == st.id && it.status != "PAID" }.sumOf { it.totalPayable - it.paidAmount }
+                                due > 0
+                            } ?: students.firstOrNull()
+                            if (firstWithDues != null) {
+                                selectedStudentForAccountDetails = firstWithDues
+                            } else {
+                                showGenerateInvoiceDialog = true
+                            }
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00C853)),
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(48.dp)
+                    ) {
+                        Text(
+                            text = "+ RECEIVED (CASH IN)",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                    }
+
+                    Button(
+                        onClick = {
+                            val firstStudent = students.firstOrNull()
+                            if (firstStudent != null) {
+                                selectedStudentForAccountDetails = firstStudent
+                            } else {
+                                Toast.makeText(context, "No accounts to record Cash Out", Toast.LENGTH_SHORT).show()
+                            }
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD50000)),
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(48.dp)
+                    ) {
+                        Text(
+                            text = "- PAID (CASH OUT)",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                    }
+                }
             }
         }
     ) { innerPadding ->
@@ -166,59 +238,65 @@ fun FeesScreen(
             ) {
                 // 1. Summary Cards Header
                 item {
-                    Card(
+                    Madrassa3dCard(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 10.dp),
-                        shape = RoundedCornerShape(16.dp),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                            .padding(horizontal = 16.dp, vertical = 8.dp),
+                        shape = RoundedCornerShape(18.dp),
+                        elevation = 6.dp,
+                        gradientColors = listOf(Color(0xFF0F5A3E), Color(0xFF083824), Color(0xFF031E13))
                     ) {
-                        Column(modifier = Modifier.padding(14.dp)) {
+                        Column(modifier = Modifier.padding(16.dp)) {
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Text(
-                                    text = "Fee Invoices & Accounts",
-                                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
-                                )
-                                Text(
-                                    text = "Total Invoiced: Rs. ${totalInvoiced.toInt()}",
-                                    style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold, color = EmeraldPrimary)
+                                Column {
+                                    Text(
+                                        text = "Fee Invoices & Accounts",
+                                        style = MaterialTheme.typography.titleMedium.copy(
+                                            fontWeight = FontWeight.Bold,
+                                            color = Color.White
+                                        )
+                                    )
+                                    Text(
+                                        text = "Islamic Financial Management System",
+                                        fontSize = 11.sp,
+                                        color = Color.White.copy(alpha = 0.75f)
+                                    )
+                                }
+                                Madrassa3dBadge(
+                                    text = "Invoiced: Rs. ${totalInvoiced.toInt()}",
+                                    containerColor = Color(0xFFE5C07B).copy(alpha = 0.25f),
+                                    contentColor = Color(0xFFFFF0C2),
+                                    borderColor = Color(0xFFE5C07B).copy(alpha = 0.7f)
                                 )
                             }
 
-                            Spacer(modifier = Modifier.height(10.dp))
+                            Spacer(modifier = Modifier.height(12.dp))
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.spacedBy(10.dp)
                             ) {
-                                Card(
+                                Madrassa3dMetricTile(
+                                    title = "Collected (Paid)",
+                                    value = "Rs. ${totalCollected.toInt()}",
+                                    icon = Icons.Default.CheckCircle,
                                     modifier = Modifier.weight(1f),
-                                    colors = CardDefaults.cardColors(containerColor = Color(0xFFE8F5E9)),
-                                    shape = RoundedCornerShape(12.dp)
-                                ) {
-                                    Column(modifier = Modifier.padding(10.dp)) {
-                                        Text(text = "Collected (Paid)", fontSize = 11.5.sp, color = Color(0xFF2E7D32), fontWeight = FontWeight.SemiBold)
-                                        Text(text = "Rs. ${totalCollected.toInt()}", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color(0xFF2E7D32))
-                                    }
-                                }
+                                    accentColor = Color(0xFF81C784)
+                                )
 
-                                Card(
+                                Madrassa3dMetricTile(
+                                    title = "Pending (بقیہ)",
+                                    value = "Rs. ${totalPending.toInt()}",
+                                    icon = Icons.Default.PendingActions,
                                     modifier = Modifier.weight(1f),
-                                    colors = CardDefaults.cardColors(containerColor = Color(0xFFFFEBEE)),
-                                    shape = RoundedCornerShape(12.dp)
-                                ) {
-                                    Column(modifier = Modifier.padding(10.dp)) {
-                                        Text(text = "Outstanding (Pending)", fontSize = 11.5.sp, color = Color(0xFFC62828), fontWeight = FontWeight.SemiBold)
-                                        Text(text = "Rs. ${totalPending.toInt()}", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color(0xFFC62828))
-                                    }
-                                }
+                                    accentColor = Color(0xFFFFB4AB)
+                                )
                             }
 
-                            Spacer(modifier = Modifier.height(12.dp))
+                            Spacer(modifier = Modifier.height(14.dp))
 
                             // Action Buttons: + Generate Invoice & Bulk Invoicing
                             Row(
@@ -227,25 +305,30 @@ fun FeesScreen(
                             ) {
                                 Button(
                                     onClick = { showGenerateInvoiceDialog = true },
-                                    colors = ButtonDefaults.buttonColors(containerColor = EmeraldPrimary),
-                                    shape = RoundedCornerShape(8.dp),
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = Color(0xFFE5C07B),
+                                        contentColor = Color(0xFF042418)
+                                    ),
+                                    shape = RoundedCornerShape(10.dp),
                                     modifier = Modifier.weight(1f),
-                                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 6.dp)
+                                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 7.dp)
                                 ) {
                                     Icon(imageVector = Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
                                     Spacer(modifier = Modifier.width(4.dp))
-                                    Text(text = "+ Generate Invoice", fontSize = 12.sp)
+                                    Text(text = "+ Generate Invoice", fontSize = 12.sp, fontWeight = FontWeight.Bold)
                                 }
 
                                 OutlinedButton(
                                     onClick = { showBulkInvoiceDialog = true },
-                                    shape = RoundedCornerShape(8.dp),
+                                    shape = RoundedCornerShape(10.dp),
+                                    border = BorderStroke(1.2.dp, Color(0xFFE5C07B).copy(alpha = 0.7f)),
+                                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFFFF0C2)),
                                     modifier = Modifier.weight(1f),
-                                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 6.dp)
+                                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 7.dp)
                                 ) {
                                     Icon(imageVector = Icons.Default.ReceiptLong, contentDescription = null, modifier = Modifier.size(16.dp))
                                     Spacer(modifier = Modifier.width(4.dp))
-                                    Text(text = "Bulk Invoicing", fontSize = 12.sp)
+                                    Text(text = "Bulk Invoicing", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                                 }
                             }
                         }
@@ -422,7 +505,8 @@ fun FeesScreen(
                                 Card(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .padding(horizontal = 16.dp, vertical = 5.dp),
+                                        .padding(horizontal = 16.dp, vertical = 5.dp)
+                                        .clickable { selectedStudentForAccountDetails = student },
                                     shape = RoundedCornerShape(14.dp),
                                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                                     elevation = CardDefaults.cardElevation(defaultElevation = 1.5.dp)
@@ -582,6 +666,17 @@ fun FeesScreen(
                                                     Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(14.dp))
                                                     Spacer(modifier = Modifier.width(3.dp))
                                                     Text(text = "+ Invoice", fontSize = 11.5.sp)
+                                                }
+
+                                                OutlinedButton(
+                                                    onClick = { selectedStudentForAccountDetails = student },
+                                                    shape = RoundedCornerShape(8.dp),
+                                                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
+                                                    modifier = Modifier.height(32.dp)
+                                                ) {
+                                                    Icon(Icons.Default.AccountBalanceWallet, contentDescription = null, modifier = Modifier.size(13.dp))
+                                                    Spacer(modifier = Modifier.width(3.dp))
+                                                    Text(text = "Khata", fontSize = 11.sp)
                                                 }
 
                                                 if (stVouchers.isNotEmpty()) {
@@ -1010,6 +1105,15 @@ fun FeesScreen(
             }
         )
     }
+
+    selectedStudentForAccountDetails?.let { st ->
+        AccountLedgerDetailsDialog(
+            student = st,
+            profile = profile,
+            viewModel = viewModel,
+            onDismiss = { selectedStudentForAccountDetails = null }
+        )
+    }
 }
 
 @Composable
@@ -1022,14 +1126,16 @@ fun InvoiceCardItem(
 ) {
     val due = voucher.totalPayable - voucher.paidAmount
 
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(14.dp))
-            .clickable { onViewSlip() },
-        shape = RoundedCornerShape(14.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.5.dp)
+    Madrassa3dCard(
+        modifier = Modifier.fillMaxWidth(),
+        onClick = onViewSlip,
+        elevation = 5.dp,
+        shape = RoundedCornerShape(16.dp),
+        gradientColors = listOf(
+            Color(0xFF0F5338),
+            Color(0xFF083221),
+            Color(0xFF031A10)
+        )
     ) {
         Column(modifier = Modifier.padding(14.dp)) {
             // Header Row: Student avatar, name, details, Status Chip
@@ -1043,12 +1149,17 @@ fun InvoiceCardItem(
                     modifier = Modifier.weight(1f),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Student Avatar / Photo
+                    // Student Avatar inside 3D Gold-Rimmed Orb
                     Box(
                         modifier = Modifier
-                            .size(44.dp)
+                            .size(46.dp)
                             .clip(CircleShape)
-                            .background(EmeraldPrimaryContainer),
+                            .background(
+                                androidx.compose.ui.graphics.Brush.radialGradient(
+                                    listOf(Color(0xFF1E6C50), Color(0xFF062B1D))
+                                )
+                            )
+                            .border(1.5.dp, Color(0xFFE5C07B).copy(alpha = 0.85f), CircleShape),
                         contentAlignment = Alignment.Center
                     ) {
                         if (!student?.photoUri.isNullOrBlank()) {
@@ -1061,9 +1172,9 @@ fun InvoiceCardItem(
                         } else {
                             Text(
                                 text = studentDisplayName.trim().take(1),
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 17.sp,
-                                color = EmeraldPrimary
+                                fontWeight = FontWeight.ExtraBold,
+                                fontSize = 18.sp,
+                                color = Color(0xFFFFF0C2)
                             )
                         }
                     }
@@ -1074,9 +1185,9 @@ fun InvoiceCardItem(
                         Text(
                             text = studentDisplayName,
                             fontWeight = FontWeight.Bold,
-                            fontSize = 16.5.sp,
+                            fontSize = 16.sp,
                             lineHeight = 22.sp,
-                            color = MaterialTheme.colorScheme.onSurface,
+                            color = Color.White,
                             softWrap = true,
                             maxLines = 2
                         )
@@ -1086,71 +1197,82 @@ fun InvoiceCardItem(
                             horizontalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
                             if (!student?.rollNo.isNullOrBlank()) {
-                                Surface(
-                                    shape = RoundedCornerShape(4.dp),
-                                    color = EmeraldPrimaryContainer.copy(alpha = 0.7f)
-                                ) {
-                                    Text(
-                                        text = "Roll: ${student!!.rollNo}",
-                                        fontSize = 10.5.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = EmeraldPrimary,
-                                        modifier = Modifier.padding(horizontal = 5.dp, vertical = 1.dp)
-                                    )
-                                }
+                                Madrassa3dBadge(
+                                    text = "Roll: ${student!!.rollNo}",
+                                    containerColor = Color(0xFFE5C07B).copy(alpha = 0.22f),
+                                    contentColor = Color(0xFFFFF0C2),
+                                    borderColor = Color(0xFFE5C07B).copy(alpha = 0.6f)
+                                )
                             }
                             if (!student?.department.isNullOrBlank()) {
                                 Text(
                                     text = "${student!!.department} (${student.section})",
                                     fontSize = 11.sp,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    color = Color(0xFFE5C07B).copy(alpha = 0.9f)
                                 )
                             }
                         }
                         Text(
                             text = "Inv: ${voucher.voucherNo} • ${voucher.monthYear}" + (if (!student?.fatherName.isNullOrBlank()) " • ولد: ${student!!.fatherName}" else ""),
                             fontSize = 11.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = Color.White.copy(alpha = 0.72f)
                         )
                     }
                 }
-                StatusChip(status = voucher.status)
+                val statusBg = when (voucher.status) {
+                    "PAID" -> Color(0xFF81C784)
+                    "PARTIAL" -> Color(0xFFFFB74D)
+                    else -> Color(0xFFE57373)
+                }
+                Madrassa3dBadge(
+                    text = voucher.status,
+                    containerColor = statusBg.copy(alpha = 0.2f),
+                    contentColor = statusBg,
+                    borderColor = statusBg.copy(alpha = 0.7f)
+                )
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
-            // Amounts Row
+            // Amounts Row with 3D Depth Card
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(Color.White.copy(alpha = 0.08f))
+                    .padding(horizontal = 10.dp, vertical = 6.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 Column {
-                    Text(text = "Total Payable: Rs. ${voucher.totalPayable.toInt()}", fontSize = 12.5.sp)
+                    Text(
+                        text = "Total Payable: Rs. ${voucher.totalPayable.toInt()}",
+                        fontSize = 12.sp,
+                        color = Color.White.copy(alpha = 0.85f)
+                    )
                     Text(
                         text = "Paid: Rs. ${voucher.paidAmount.toInt()}",
                         fontSize = 12.5.sp,
-                        color = Color(0xFF2E7D32),
-                        fontWeight = FontWeight.SemiBold
+                        color = Color(0xFF81C784),
+                        fontWeight = FontWeight.Bold
                     )
                 }
                 Column(horizontalAlignment = Alignment.End) {
                     Text(
                         text = "Balance: Rs. ${due.toInt()}",
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = if (due > 0) Color(0xFFD32F2F) else Color(0xFF2E7D32)
+                        fontSize = 13.5.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = if (due > 0) Color(0xFFFF8A80) else Color(0xFF81C784)
                     )
                     Text(
                         text = "Due: ${voucher.dueDate}",
-                        fontSize = 11.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        fontSize = 10.5.sp,
+                        color = Color(0xFFE5C07B)
                     )
                 }
             }
 
             Spacer(modifier = Modifier.height(10.dp))
-            HorizontalDivider()
-            Spacer(modifier = Modifier.height(6.dp))
 
             // Action row
             Row(
@@ -1162,21 +1284,24 @@ fun InvoiceCardItem(
                     onClick = onViewSlip,
                     contentPadding = PaddingValues(horizontal = 6.dp, vertical = 2.dp)
                 ) {
-                    Icon(imageVector = Icons.Default.Description, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Icon(imageVector = Icons.Default.Description, contentDescription = null, tint = Color(0xFFE5C07B), modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text(text = "View Invoice Slip", fontSize = 12.sp, color = EmeraldPrimary)
+                    Text(text = "View Invoice Slip", fontSize = 12.sp, color = Color(0xFFE5C07B), fontWeight = FontWeight.Bold)
                 }
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     if (voucher.status != "PAID") {
                         Button(
                             onClick = onPayClick,
-                            colors = ButtonDefaults.buttonColors(containerColor = EmeraldPrimary),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFFE5C07B),
+                                contentColor = Color(0xFF042418)
+                            ),
                             shape = RoundedCornerShape(8.dp),
                             contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
                             modifier = Modifier.height(32.dp)
                         ) {
-                            Text(text = "Collect", fontSize = 11.5.sp)
+                            Text(text = "Collect", fontSize = 11.5.sp, fontWeight = FontWeight.Bold)
                         }
                     }
 
@@ -1187,7 +1312,7 @@ fun InvoiceCardItem(
                         Icon(
                             imageVector = Icons.Default.Delete,
                             contentDescription = "Delete Invoice",
-                            tint = Color(0xFFD32F2F).copy(alpha = 0.7f),
+                            tint = Color(0xFFFF8A80).copy(alpha = 0.85f),
                             modifier = Modifier.size(18.dp)
                         )
                     }

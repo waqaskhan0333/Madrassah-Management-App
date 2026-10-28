@@ -134,7 +134,7 @@ fun InvoiceSlipDialog(
                         InvoiceDetailRow(label = "Student Name:", value = student?.name ?: "Unknown")
                         InvoiceDetailRow(label = "Roll Number:", value = student?.rollNo ?: "N/A")
                         InvoiceDetailRow(label = "Father's Name:", value = student?.fatherName ?: "N/A")
-                        InvoiceDetailRow(label = "Class / Department:", value = "${student?.department} (${student?.section})")
+                        InvoiceDetailRow(label = "Class / درجہ:", value = "${student?.department} (${student?.section})")
                         InvoiceDetailRow(label = "Billing Month:", value = voucher.monthYear)
                         InvoiceDetailRow(label = "Due Date:", value = voucher.dueDate)
                     }

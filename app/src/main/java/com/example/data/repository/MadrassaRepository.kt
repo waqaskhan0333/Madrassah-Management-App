@@ -131,6 +131,7 @@ class MadrassaRepository(private val db: AppDatabase) {
     fun getVouchersForStudent(studentId: Long): Flow<List<FeeVoucher>> = db.feeDao().getVouchersForStudent(studentId)
     fun getPaymentsForVoucher(voucherId: Long): Flow<List<PaymentRecord>> = db.feeDao().getPaymentsForVoucher(voucherId)
     suspend fun insertPayment(payment: PaymentRecord) = db.feeDao().insertPayment(payment)
+    suspend fun deletePayment(id: Long) = db.feeDao().deletePayment(id)
 
     suspend fun updateProfile(profile: MadrassaProfile) = db.madrassaProfileDao().insertOrUpdateProfile(profile)
 }

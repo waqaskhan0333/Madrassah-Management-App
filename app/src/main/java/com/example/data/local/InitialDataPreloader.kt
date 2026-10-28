@@ -383,7 +383,9 @@ object InitialDataPreloader {
         )
         database.examDao().insertExams(listOf(midTermExam, hifzOralExam))
 
-        val results = listOf(
+        // Real exam results are recorded by teachers/examiners in the Exam Marksheet or DMC preview.
+        val results = emptyList<ExamResult>()
+        val dummyResultsIgnored = listOf(
             ExamResult(
                 id = 0,
                 examId = 1,

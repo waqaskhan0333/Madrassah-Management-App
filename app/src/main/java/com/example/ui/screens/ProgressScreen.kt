@@ -2,6 +2,7 @@ package com.example.ui.screens
 
 import android.widget.Toast
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -28,6 +29,9 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import coil.compose.AsyncImage
 import com.example.data.model.*
+import com.example.ui.components.Madrassa3dBadge
+import com.example.ui.components.Madrassa3dCard
+import com.example.ui.components.Madrassa3dMetricTile
 import com.example.ui.components.StatusChip
 import com.example.ui.theme.EmeraldPrimary
 import com.example.ui.theme.EmeraldPrimaryContainer
@@ -42,7 +46,7 @@ fun ProgressScreen(
     val context = LocalContext.current
     var activeModeTab by remember { mutableIntStateOf(0) } // 0: All Students Roster, 1: Recent Logs History
     var searchQuery by remember { mutableStateOf("") }
-    var selectedDeptFilter by remember { mutableStateOf("All Depts") }
+    var selectedDeptFilter by remember { mutableStateOf("All Classes") }
     var selectedCampusFilter by remember { mutableStateOf("All Campuses") }
     var preselectedStudentId by remember { mutableStateOf<Long?>(null) }
 
@@ -66,7 +70,7 @@ fun ProgressScreen(
         students.filter { st ->
             val matchCampus = selectedCampusFilter == "All Campuses" || st.campus.equals(selectedCampusFilter, ignoreCase = true)
             val matchDept = when (selectedDeptFilter) {
-                "All Depts" -> true
+                "All Classes", "All Depts" -> true
                 "Hifz" -> st.department.contains("Hifz", true)
                 "Nazra" -> st.department.contains("Nazra", true)
                 "Qaida" -> st.department.contains("Qaida", true)
@@ -175,7 +179,7 @@ fun ProgressScreen(
                     .padding(horizontal = 14.dp),
                 horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
-                val depts = listOf("All Depts", "Hifz", "Nazra", "Qaida", "Tajweed")
+                val depts = listOf("All Classes", "Hifz", "Nazra", "Qaida", "Tajweed")
                 val campuses = listOf("All Campuses", "Main Campus", "Campus 2", "Campus 3")
 
                 items(depts) { d ->
@@ -215,11 +219,11 @@ fun ProgressScreen(
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(text = "کوئی طالب علم موجود نہیں (No students found)", color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            if (searchQuery.isNotEmpty() || selectedDeptFilter != "All Depts" || selectedCampusFilter != "All Campuses") {
+                            if (searchQuery.isNotEmpty() || (selectedDeptFilter != "All Classes" && selectedDeptFilter != "All Depts") || selectedCampusFilter != "All Campuses") {
                                 Spacer(modifier = Modifier.height(8.dp))
                                 TextButton(onClick = {
                                     searchQuery = ""
-                                    selectedDeptFilter = "All Depts"
+                                    selectedDeptFilter = "All Classes"
                                     selectedCampusFilter = "All Campuses"
                                 }) {
                                     Text("تمام طلباء دکھائیں (Show All Students)")
@@ -239,38 +243,49 @@ fun ProgressScreen(
                             val latestQaida = recentQaida.firstOrNull { it.studentId == student.id }
                             val latestTajweed = recentTajweed.firstOrNull { it.studentId == student.id }
 
-                            Card(
+                            Madrassa3dCard(
                                 modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(14.dp),
-                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                                shape = RoundedCornerShape(16.dp),
+                                elevation = 5.dp,
+                                gradientColors = listOf(
+                                    Color(0xFF0F5338),
+                                    Color(0xFF083221),
+                                    Color(0xFF031A10)
+                                )
                             ) {
                                 Column(modifier = Modifier.padding(14.dp)) {
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
-                                        // Student Photo / Avatar Circle
+                                        // Student Photo inside 3D Gold-Rimmed Orb
                                         Box(
                                             modifier = Modifier
                                                 .size(52.dp)
                                                 .clip(CircleShape)
-                                                .background(EmeraldPrimaryContainer),
+                                                .background(
+                                                    androidx.compose.ui.graphics.Brush.radialGradient(
+                                                        listOf(Color(0xFF1E6C50), Color(0xFF062B1D))
+                                                    )
+                                                )
+                                                .border(1.5.dp, Color(0xFFE5C07B).copy(alpha = 0.85f), CircleShape),
                                             contentAlignment = Alignment.Center
                                         ) {
                                             if (student.photoUri.isNotBlank()) {
                                                 AsyncImage(
                                                     model = ImageStorageHelper.toImageModel(student.photoUri),
                                                     contentDescription = student.name,
-                                                    modifier = Modifier.fillMaxSize(),
+                                                    modifier = Modifier
+                                                        .fillMaxSize()
+                                                        .clip(CircleShape),
                                                     contentScale = ContentScale.Crop
                                                 )
                                             } else {
                                                 Text(
                                                     text = student.name.firstOrNull()?.uppercase() ?: "ط",
-                                                    fontWeight = FontWeight.Bold,
-                                                    color = EmeraldPrimary,
-                                                    fontSize = 18.sp
+                                                    fontWeight = FontWeight.ExtraBold,
+                                                    color = Color(0xFFFFF0C2),
+                                                    fontSize = 19.sp
                                                 )
                                             }
                                         }
@@ -285,34 +300,32 @@ fun ProgressScreen(
                                             ) {
                                                 Text(
                                                     text = student.name,
-                                                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                                                    style = MaterialTheme.typography.titleMedium.copy(
+                                                        fontWeight = FontWeight.Bold,
+                                                        color = Color.White,
+                                                        fontSize = 16.sp
+                                                    ),
                                                     softWrap = true,
                                                     maxLines = 2,
                                                     modifier = Modifier.weight(1f, fill = false)
                                                 )
-                                                Surface(
-                                                    shape = RoundedCornerShape(6.dp),
-                                                    color = EmeraldPrimaryContainer
-                                                ) {
-                                                    Text(
-                                                        text = "Roll: ${student.rollNo}",
-                                                        fontSize = 11.sp,
-                                                        fontWeight = FontWeight.Bold,
-                                                        color = EmeraldPrimary,
-                                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                                                    )
-                                                }
+                                                Madrassa3dBadge(
+                                                    text = "Roll: ${student.rollNo}",
+                                                    containerColor = Color(0xFFE5C07B).copy(alpha = 0.22f),
+                                                    contentColor = Color(0xFFFFF0C2),
+                                                    borderColor = Color(0xFFE5C07B).copy(alpha = 0.6f)
+                                                )
                                             }
 
                                             Spacer(modifier = Modifier.height(2.dp))
 
                                             Text(
-                                                text = "ولدیت: ${student.fatherName} • ${student.department} (${student.section})",
-                                                fontSize = 12.sp,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                text = "ولدیت: ${student.fatherName} • Class: ${student.department} (${student.section})",
+                                                fontSize = 11.5.sp,
+                                                color = Color.White.copy(alpha = 0.78f)
                                             )
 
-                                            Spacer(modifier = Modifier.height(4.dp))
+                                            Spacer(modifier = Modifier.height(6.dp))
 
                                             // Progress summary badge
                                             val progressSummary = when {
@@ -335,15 +348,16 @@ fun ProgressScreen(
                                             }
 
                                             Surface(
-                                                shape = RoundedCornerShape(6.dp),
-                                                color = Color(0xFFF1F8F5)
+                                                shape = RoundedCornerShape(8.dp),
+                                                color = Color.White.copy(alpha = 0.1f),
+                                                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFE5C07B).copy(alpha = 0.4f))
                                             ) {
                                                 Text(
                                                     text = progressSummary,
-                                                    fontSize = 11.5.sp,
-                                                    color = EmeraldPrimary,
+                                                    fontSize = 11.sp,
+                                                    color = Color(0xFFFFF0C2),
                                                     fontWeight = FontWeight.Medium,
-                                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.5.dp)
                                                 )
                                             }
                                         }
@@ -374,8 +388,11 @@ fun ProgressScreen(
                                                 tajweedToEdit = null
                                                 showAddDialog = true
                                             },
-                                            shape = RoundedCornerShape(8.dp),
-                                            colors = ButtonDefaults.buttonColors(containerColor = EmeraldPrimary),
+                                            shape = RoundedCornerShape(10.dp),
+                                            colors = ButtonDefaults.buttonColors(
+                                                containerColor = Color(0xFFE5C07B),
+                                                contentColor = Color(0xFF042418)
+                                            ),
                                             contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
                                         ) {
                                             Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))

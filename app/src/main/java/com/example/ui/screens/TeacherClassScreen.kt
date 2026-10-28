@@ -3,6 +3,7 @@ package com.example.ui.screens
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -27,6 +28,9 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.data.model.Student
 import com.example.data.model.Teacher
+import com.example.ui.components.Madrassa3dBadge
+import com.example.ui.components.Madrassa3dCard
+import com.example.ui.components.Madrassa3dMetricTile
 import com.example.ui.components.StatusChip
 import com.example.ui.theme.EmeraldPrimary
 import com.example.ui.theme.EmeraldPrimaryContainer
@@ -148,11 +152,11 @@ fun TeacherClassScreen(
         ) {
             // 1. Teacher Header Card
             item {
-                Card(
+                Madrassa3dCard(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                    shape = RoundedCornerShape(18.dp),
+                    elevation = 6.dp,
+                    gradientColors = listOf(Color(0xFF0F5A3E), Color(0xFF083824), Color(0xFF031E13))
                 ) {
                     Row(
                         modifier = Modifier
@@ -160,24 +164,36 @@ fun TeacherClassScreen(
                             .padding(16.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
+                        // Teacher Photo in 3D Gold-Rimmed Orb
                         Box(
                             modifier = Modifier
-                                .size(60.dp)
+                                .size(62.dp)
                                 .clip(CircleShape)
-                                .background(EmeraldPrimaryContainer),
+                                .background(
+                                    androidx.compose.ui.graphics.Brush.radialGradient(
+                                        listOf(Color(0xFF1E6C50), Color(0xFF062B1D))
+                                    )
+                                )
+                                .border(1.8.dp, Color(0xFFE5C07B).copy(alpha = 0.9f), CircleShape),
                             contentAlignment = Alignment.Center
                         ) {
                             if (currentTeacher.photoUri.isNotBlank()) {
                                 AsyncImage(
                                     model = ImageStorageHelper.toImageModel(currentTeacher.photoUri),
                                     contentDescription = currentTeacher.name,
-                                    modifier = Modifier.fillMaxSize(),
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .clip(CircleShape),
                                     contentScale = ContentScale.Crop
                                 )
                             } else {
                                 Text(
                                     text = currentTeacher.name.firstOrNull()?.uppercase() ?: "U",
-                                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold, color = EmeraldPrimary)
+                                    style = MaterialTheme.typography.titleLarge.copy(
+                                        fontWeight = FontWeight.ExtraBold,
+                                        color = Color(0xFFFFF0C2),
+                                        fontSize = 22.sp
+                                    )
                                 )
                             }
                         }
@@ -185,67 +201,85 @@ fun TeacherClassScreen(
                         Spacer(modifier = Modifier.width(14.dp))
 
                         Column(modifier = Modifier.weight(1f)) {
-                            Text(text = currentTeacher.name, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
-                            Text(text = "${currentTeacher.role}  |  ${currentTeacher.qualification}", style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant))
                             Text(
-                                text = "Assigned: ${currentTeacher.assignedDepartment} (${currentTeacher.assignedSections})",
-                                style = MaterialTheme.typography.bodySmall.copy(color = EmeraldPrimary, fontWeight = FontWeight.Bold)
+                                text = currentTeacher.name,
+                                style = MaterialTheme.typography.titleMedium.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.White,
+                                    fontSize = 17.sp
+                                )
                             )
-                            Text(text = "Phone: ${currentTeacher.phone}", style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant))
+                            Text(
+                                text = "${currentTeacher.role}  |  ${currentTeacher.qualification}",
+                                style = MaterialTheme.typography.bodySmall.copy(
+                                    color = Color.White.copy(alpha = 0.8f),
+                                    fontSize = 11.5.sp
+                                )
+                            )
+                            Spacer(modifier = Modifier.height(3.dp))
+                            Madrassa3dBadge(
+                                text = "Class: ${currentTeacher.assignedDepartment} (${currentTeacher.assignedSections})",
+                                containerColor = Color(0xFFE5C07B).copy(alpha = 0.22f),
+                                contentColor = Color(0xFFFFF0C2),
+                                borderColor = Color(0xFFE5C07B).copy(alpha = 0.6f)
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = "Phone: ${currentTeacher.phone}",
+                                style = MaterialTheme.typography.bodySmall.copy(
+                                    color = Color(0xFFE5C07B),
+                                    fontSize = 11.sp
+                                )
+                            )
                         }
 
                         if (UserRoleManager.isAdmin) {
                             Button(
                                 onClick = { showAssignDialog = true },
-                                colors = ButtonDefaults.buttonColors(containerColor = EmeraldPrimary),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Color(0xFFE5C07B),
+                                    contentColor = Color(0xFF042418)
+                                ),
                                 shape = RoundedCornerShape(10.dp),
                                 contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp)
                             ) {
-                                Text(text = "Assign", fontSize = 11.5.sp)
+                                Text(text = "Assign", fontSize = 11.5.sp, fontWeight = FontWeight.Bold)
                             }
                         }
                     }
                 }
             }
 
-            // 2. Stats Row
+            // 2. 3D Stats Row
             item {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    Card(
+                    Madrassa3dMetricTile(
+                        title = "Students",
+                        value = "${assignedStudents.size}",
+                        icon = Icons.Default.Groups,
                         modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = CardDefaults.cardColors(containerColor = EmeraldPrimaryContainer.copy(alpha = 0.5f))
-                    ) {
-                        Column(modifier = Modifier.padding(12.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(text = "${assignedStudents.size}", style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold, color = EmeraldPrimary))
-                            Text(text = "Total Students", style = MaterialTheme.typography.labelSmall.copy(color = EmeraldPrimary))
-                        }
-                    }
+                        accentColor = Color(0xFFE5C07B)
+                    )
 
-                    Card(
+                    Madrassa3dMetricTile(
+                        title = "Present Today",
+                        value = "$presentCount",
+                        trendText = "Out of ${assignedStudents.size}",
+                        icon = Icons.Default.CheckCircle,
                         modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color(0xFFE8F5E9))
-                    ) {
-                        Column(modifier = Modifier.padding(12.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(text = "$presentCount / ${assignedStudents.size}", style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold, color = Color(0xFF2E7D32)))
-                            Text(text = "Present Today", style = MaterialTheme.typography.labelSmall.copy(color = Color(0xFF2E7D32)))
-                        }
-                    }
+                        accentColor = Color(0xFF81C784)
+                    )
 
-                    Card(
+                    Madrassa3dMetricTile(
+                        title = "Absent Today",
+                        value = "$absentCount",
+                        icon = Icons.Default.Cancel,
                         modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color(0xFFFFEBEE))
-                    ) {
-                        Column(modifier = Modifier.padding(12.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(text = "$absentCount", style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold, color = Color(0xFFC62828)))
-                            Text(text = "Absent Today", style = MaterialTheme.typography.labelSmall.copy(color = Color(0xFFC62828)))
-                        }
-                    }
+                        accentColor = Color(0xFFFF8A80)
+                    )
                 }
             }
 
@@ -375,40 +409,50 @@ fun TeacherClassScreen(
                     val record = todayAttendance.find { it.personId == student.id }
                     val currentStatus = record?.status ?: "UNMARKED"
 
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { onStudentClick(student) },
-                        shape = RoundedCornerShape(14.dp),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                    Madrassa3dCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        onClick = { onStudentClick(student) },
+                        elevation = 5.dp,
+                        shape = RoundedCornerShape(16.dp),
+                        gradientColors = listOf(
+                            Color(0xFF0F5338),
+                            Color(0xFF083221),
+                            Color(0xFF031A10)
+                        )
                     ) {
                         Column(modifier = Modifier.padding(14.dp)) {
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                // Photo / Avatar
+                                // Photo inside 3D Gold-Rimmed Orb
                                 Box(
                                     modifier = Modifier
-                                        .size(50.dp)
+                                        .size(52.dp)
                                         .clip(CircleShape)
-                                        .background(EmeraldPrimaryContainer),
+                                        .background(
+                                            androidx.compose.ui.graphics.Brush.radialGradient(
+                                                listOf(Color(0xFF1E6C50), Color(0xFF062B1D))
+                                            )
+                                        )
+                                        .border(1.5.dp, Color(0xFFE5C07B).copy(alpha = 0.85f), CircleShape),
                                     contentAlignment = Alignment.Center
                                 ) {
                                     if (student.photoUri.isNotBlank()) {
                                         AsyncImage(
                                             model = ImageStorageHelper.toImageModel(student.photoUri),
                                             contentDescription = student.name,
-                                            modifier = Modifier.fillMaxSize(),
+                                            modifier = Modifier
+                                                .fillMaxSize()
+                                                .clip(CircleShape),
                                             contentScale = ContentScale.Crop
                                         )
                                     } else {
                                         Text(
                                             text = student.name.firstOrNull()?.uppercase() ?: "S",
-                                            fontWeight = FontWeight.Bold,
-                                            color = EmeraldPrimary,
-                                            fontSize = 18.sp
+                                            fontWeight = FontWeight.ExtraBold,
+                                            color = Color(0xFFFFF0C2),
+                                            fontSize = 19.sp
                                         )
                                     }
                                 }
@@ -423,35 +467,39 @@ fun TeacherClassScreen(
                                     ) {
                                         Text(
                                             text = student.name,
-                                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                                            style = MaterialTheme.typography.titleMedium.copy(
+                                                fontWeight = FontWeight.Bold,
+                                                color = Color.White,
+                                                fontSize = 16.sp
+                                            ),
                                             softWrap = true,
                                             maxLines = 2,
                                             modifier = Modifier.weight(1f, fill = false)
                                         )
 
-                                        Surface(
-                                            shape = RoundedCornerShape(6.dp),
-                                            color = EmeraldPrimaryContainer
-                                        ) {
-                                            Text(
-                                                text = "Roll: ${student.rollNo}",
-                                                fontSize = 11.sp,
-                                                fontWeight = FontWeight.Bold,
-                                                color = EmeraldPrimary,
-                                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                                            )
-                                        }
+                                        Madrassa3dBadge(
+                                            text = "Roll: ${student.rollNo}",
+                                            containerColor = Color(0xFFE5C07B).copy(alpha = 0.22f),
+                                            contentColor = Color(0xFFFFF0C2),
+                                            borderColor = Color(0xFFE5C07B).copy(alpha = 0.6f)
+                                        )
                                     }
 
                                     Spacer(modifier = Modifier.height(2.dp))
 
                                     Text(
                                         text = "ولدیت: ${student.fatherName} • نصاب: ${student.paray}",
-                                        style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 11.5.sp)
+                                        style = MaterialTheme.typography.bodySmall.copy(
+                                            color = Color.White.copy(alpha = 0.8f),
+                                            fontSize = 11.5.sp
+                                        )
                                     )
                                     Text(
                                         text = "${student.department} (${student.section}) • ${student.campus}",
-                                        style = MaterialTheme.typography.bodySmall.copy(color = EmeraldPrimary, fontSize = 11.sp)
+                                        style = MaterialTheme.typography.bodySmall.copy(
+                                            color = Color(0xFFE5C07B),
+                                            fontSize = 11.sp
+                                        )
                                     )
                                 }
                             }
@@ -471,8 +519,8 @@ fun TeacherClassScreen(
                                             viewModel.markAttendance(student.id, "STUDENT", "PRESENT")
                                         },
                                         colors = ButtonDefaults.buttonColors(
-                                            containerColor = if (currentStatus == "PRESENT") Color(0xFF2E7D32) else Color(0xFFE8F5E9),
-                                            contentColor = if (currentStatus == "PRESENT") Color.White else Color(0xFF2E7D32)
+                                            containerColor = if (currentStatus == "PRESENT") Color(0xFF81C784) else Color.White.copy(alpha = 0.12f),
+                                            contentColor = if (currentStatus == "PRESENT") Color(0xFF042418) else Color(0xFF81C784)
                                         ),
                                         shape = RoundedCornerShape(8.dp),
                                         contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
@@ -487,8 +535,8 @@ fun TeacherClassScreen(
                                             viewModel.markAttendance(student.id, "STUDENT", "ABSENT")
                                         },
                                         colors = ButtonDefaults.buttonColors(
-                                            containerColor = if (currentStatus == "ABSENT") Color(0xFFC62828) else Color(0xFFFFEBEE),
-                                            contentColor = if (currentStatus == "ABSENT") Color.White else Color(0xFFC62828)
+                                            containerColor = if (currentStatus == "ABSENT") Color(0xFFFF8A80) else Color.White.copy(alpha = 0.12f),
+                                            contentColor = if (currentStatus == "ABSENT") Color(0xFF042418) else Color(0xFFFF8A80)
                                         ),
                                         shape = RoundedCornerShape(8.dp),
                                         contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
@@ -503,11 +551,11 @@ fun TeacherClassScreen(
                                             viewModel.markAttendance(student.id, "STUDENT", "LATE")
                                         },
                                         colors = ButtonDefaults.buttonColors(
-                                            containerColor = if (currentStatus == "LATE") Color(0xFFE65100) else Color(0xFFFFF3E0),
-                                            contentColor = if (currentStatus == "LATE") Color.White else Color(0xFFE65100)
+                                            containerColor = if (currentStatus == "LATE") Color(0xFFFFB74D) else Color.White.copy(alpha = 0.12f),
+                                            contentColor = if (currentStatus == "LATE") Color(0xFF042418) else Color(0xFFFFB74D)
                                         ),
                                         shape = RoundedCornerShape(8.dp),
-                                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
+                                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
                                         modifier = Modifier.height(32.dp)
                                     ) {
                                         Text("⏰ تاخیر", fontSize = 11.sp, fontWeight = FontWeight.Bold)
@@ -518,7 +566,7 @@ fun TeacherClassScreen(
                                     onClick = { onStudentClick(student) },
                                     contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
                                 ) {
-                                    Text("پروفائل", fontSize = 11.5.sp, color = EmeraldPrimary, fontWeight = FontWeight.Bold)
+                                    Text("پروفائل", fontSize = 11.5.sp, color = Color(0xFFE5C07B), fontWeight = FontWeight.Bold)
                                 }
                             }
                         }
@@ -560,7 +608,7 @@ fun AssignClassDialog(
         title = { Text(text = "Assign Class to ${teacher.name}", fontWeight = FontWeight.Bold) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text(text = "Select Department:", style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold))
+                Text(text = "Select Class / درجہ:", style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold))
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     departments.take(2).forEach { dept ->
                         FilterChip(

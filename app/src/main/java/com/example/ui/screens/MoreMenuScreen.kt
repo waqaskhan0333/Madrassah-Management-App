@@ -9,6 +9,7 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -24,6 +25,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
@@ -42,6 +44,8 @@ import com.example.data.model.Teacher
 import com.example.ui.components.ExamListScannerDialog
 import com.example.ui.components.ExamResultsTableView
 import com.example.ui.components.IdCardDialog
+import com.example.ui.components.Madrassa3dCard
+import com.example.ui.components.Madrassa3dIconOrb
 import com.example.ui.components.StatusChip
 import com.example.ui.theme.EmeraldPrimary
 import com.example.ui.theme.EmeraldPrimaryContainer
@@ -105,8 +109,7 @@ fun MoreMenuScreen(
                 )
             } ?: run { activeSubSection = "TEACHERS" }
         }
-        "IMAGE_STORAGE" -> ImageStorageViewerSubScreen(
-            students = students,
+        "IMAGE_STORAGE" -> InternalPhotoManagerScreen(
             viewModel = viewModel,
             onBack = closeSubSection
         )
@@ -234,11 +237,10 @@ fun MoreMenuScreen(
 
                 // Admin & Madrassa Info Card with Logo
                 item {
-                    Card(
+                    Madrassa3dCard(
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(16.dp),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                        shape = RoundedCornerShape(18.dp),
+                        elevation = 6.dp
                     ) {
                         Row(
                             modifier = Modifier
@@ -248,9 +250,10 @@ fun MoreMenuScreen(
                         ) {
                             Box(
                                 modifier = Modifier
-                                    .size(60.dp)
+                                    .size(62.dp)
                                     .clip(CircleShape)
-                                    .background(EmeraldPrimaryContainer),
+                                    .background(Brush.radialGradient(listOf(Color(0xFF1B6B4F), Color(0xFF042418))))
+                                    .border(1.5.dp, Color(0xFFE5C07B), CircleShape),
                                 contentAlignment = Alignment.Center
                             ) {
                                 if (profile.logoUri.isNotBlank()) {
@@ -264,7 +267,7 @@ fun MoreMenuScreen(
                                     Icon(
                                         imageVector = Icons.Default.AccountBalance,
                                         contentDescription = null,
-                                        tint = EmeraldPrimary,
+                                        tint = Color(0xFFE5C07B),
                                         modifier = Modifier.size(32.dp)
                                     )
                                 }
@@ -273,15 +276,15 @@ fun MoreMenuScreen(
                             Column {
                                 Text(
                                     text = if (LanguageState.isUrdu) profile.nameUr else profile.nameEn,
-                                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, color = Color.White)
                                 )
                                 Text(
                                     text = "${t("principal_name")}: ${profile.principalName}",
-                                    style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    style = MaterialTheme.typography.bodySmall.copy(color = Color.White.copy(alpha = 0.8f))
                                 )
                                 Text(
                                     text = "${t("session_year")}: ${profile.sessionYear}",
-                                    style = MaterialTheme.typography.bodySmall.copy(color = EmeraldPrimary, fontWeight = FontWeight.SemiBold)
+                                    style = MaterialTheme.typography.bodySmall.copy(color = Color(0xFFE5C07B), fontWeight = FontWeight.SemiBold)
                                 )
                             }
                         }
@@ -421,18 +424,16 @@ fun MenuItemRow(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onClick() }
-            .padding(16.dp),
+            .padding(14.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Box(
-            modifier = Modifier
-                .size(40.dp)
-                .clip(CircleShape)
-                .background(iconColor.copy(alpha = 0.12f)),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(imageVector = icon, contentDescription = title, tint = iconColor, modifier = Modifier.size(20.dp))
-        }
+        Madrassa3dIconOrb(
+            icon = icon,
+            tint = iconColor,
+            borderColor = iconColor.copy(alpha = 0.5f),
+            size = 40.dp,
+            iconSize = 20.dp
+        )
         Spacer(modifier = Modifier.width(14.dp))
         Column(modifier = Modifier.weight(1f)) {
             Text(text = title, style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold))
@@ -1027,29 +1028,38 @@ fun ExamsSubScreen(
                 }
             } else {
                 items(filteredExams) { exam ->
-                    Card(
+                    Madrassa3dCard(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable { selectedExamForTable = exam },
-                        shape = RoundedCornerShape(12.dp),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                        shape = RoundedCornerShape(16.dp),
+                        elevation = 5.dp
                     ) {
-                        Column(modifier = Modifier.padding(14.dp)) {
+                        Column(modifier = Modifier.padding(16.dp)) {
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Column(modifier = Modifier.weight(1f)) {
-                                    Text(text = exam.title, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                                    Text(
+                                        text = exam.title,
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 16.sp,
+                                        color = Color.White
+                                    )
                                     val typeDisplay = when (exam.type) {
                                         "HIFZ_ORAL" -> "حفظ زبانی جائزہ (Hifz Oral Assessment)"
                                         "TAJWEED_TEST" -> "تجوید ٹیسٹ (Tajweed Test)"
                                         "ANNUAL" -> "سالانہ امتحان (Annual Exam)"
                                         else -> "ششماہی امتحان (Mid-Term Exam)"
                                     }
-                                    Text(text = typeDisplay, fontSize = 11.5.sp, color = EmeraldPrimary, fontWeight = FontWeight.SemiBold)
+                                    Text(
+                                        text = typeDisplay,
+                                        fontSize = 11.5.sp,
+                                        color = Color(0xFFE5C07B),
+                                        fontWeight = FontWeight.SemiBold
+                                    )
                                 }
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     StatusChip(status = exam.status)
@@ -1058,24 +1068,34 @@ fun ExamsSubScreen(
                                         examToEdit = exam
                                         showDialog = true
                                     }, modifier = Modifier.size(32.dp)) {
-                                        Icon(Icons.Default.Edit, contentDescription = "Edit Exam", tint = EmeraldPrimary, modifier = Modifier.size(18.dp))
+                                        Icon(Icons.Default.Edit, contentDescription = "Edit Exam", tint = Color(0xFFE5C07B), modifier = Modifier.size(18.dp))
                                     }
                                     IconButton(onClick = { examToDelete = exam }, modifier = Modifier.size(32.dp)) {
-                                        Icon(Icons.Default.Delete, contentDescription = "Delete Exam", tint = Color(0xFFD32F2F), modifier = Modifier.size(18.dp))
+                                        Icon(Icons.Default.Delete, contentDescription = "Delete Exam", tint = Color(0xFFFF8A80), modifier = Modifier.size(18.dp))
                                     }
                                 }
                             }
                             Spacer(modifier = Modifier.height(4.dp))
-                            Text(text = "Date: ${exam.date}  |  Class/Section: ${exam.section}", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            Text(text = "Total Marks: ${exam.totalMarks}  |  Passing Marks: ${exam.passMarks}", fontSize = 12.sp, color = EmeraldPrimary, fontWeight = FontWeight.SemiBold)
+                            Text(
+                                text = "Date: ${exam.date}  |  Class/Section: ${exam.section}",
+                                fontSize = 12.sp,
+                                color = Color.White.copy(alpha = 0.8f)
+                            )
+                            Text(
+                                text = "Total Marks: ${exam.totalMarks}  |  Passing Marks: ${exam.passMarks}",
+                                fontSize = 12.sp,
+                                color = Color(0xFFE5C07B),
+                                fontWeight = FontWeight.SemiBold
+                            )
 
                             val examResults by viewModel.getResultsForExam(exam.id).collectAsState(initial = emptyList())
-                            Spacer(modifier = Modifier.height(6.dp))
+                            Spacer(modifier = Modifier.height(8.dp))
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .background(EmeraldPrimaryContainer.copy(alpha = 0.4f), RoundedCornerShape(6.dp))
-                                    .padding(horizontal = 8.dp, vertical = 5.dp),
+                                    .background(Color(0xFF042418).copy(alpha = 0.7f), RoundedCornerShape(8.dp))
+                                    .border(1.dp, Color(0xFFE5C07B).copy(alpha = 0.25f), RoundedCornerShape(8.dp))
+                                    .padding(horizontal = 10.dp, vertical = 6.dp),
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
@@ -1084,14 +1104,14 @@ fun ExamsSubScreen(
                                         modifier = Modifier
                                             .size(7.dp)
                                             .clip(CircleShape)
-                                            .background(Color(0xFF00C853))
+                                            .background(Color(0xFF00E676))
                                     )
-                                    Spacer(modifier = Modifier.width(5.dp))
+                                    Spacer(modifier = Modifier.width(6.dp))
                                     Text(
                                         text = "Real-Time: ${examResults.size} Students Evaluated",
                                         fontSize = 11.sp,
                                         fontWeight = FontWeight.Bold,
-                                        color = EmeraldPrimary
+                                        color = Color(0xFFE5C07B)
                                     )
                                 }
                                 if (examResults.isNotEmpty()) {
@@ -1099,13 +1119,13 @@ fun ExamsSubScreen(
                                         text = "Pass: ${examResults.count { it.isPassed }} | Fail: ${examResults.count { !it.isPassed }}",
                                         fontSize = 10.5.sp,
                                         fontWeight = FontWeight.SemiBold,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        color = Color.White.copy(alpha = 0.85f)
                                     )
                                 } else {
                                     Text(
                                         text = "Pending (تیار)",
                                         fontSize = 10.5.sp,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        color = Color.White.copy(alpha = 0.65f)
                                     )
                                 }
                             }
@@ -1115,13 +1135,18 @@ fun ExamsSubScreen(
                             // Open Table Button
                             Button(
                                 onClick = { selectedExamForTable = exam },
-                                colors = ButtonDefaults.buttonColors(containerColor = EmeraldPrimary),
-                                shape = RoundedCornerShape(8.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD4AF37)),
+                                shape = RoundedCornerShape(10.dp),
                                 modifier = Modifier.fillMaxWidth()
                             ) {
-                                Icon(Icons.Default.TableChart, contentDescription = null, modifier = Modifier.size(16.dp))
+                                Icon(Icons.Default.TableChart, contentDescription = null, tint = Color(0xFF042418), modifier = Modifier.size(16.dp))
                                 Spacer(modifier = Modifier.width(6.dp))
-                                Text(text = "امتحانی مارک شیٹ جدول دیکھیں (Open Marksheet Table)", fontSize = 12.sp)
+                                Text(
+                                    text = "امتحانی مارک شیٹ جدول دیکھیں (Open Marksheet Table)",
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF042418)
+                                )
                             }
                         }
                     }
@@ -1301,39 +1326,61 @@ fun CoursesSubScreen(
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             items(courses) { course ->
-                Card(
+                Madrassa3dCard(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                    shape = RoundedCornerShape(16.dp),
+                    elevation = 5.dp
                 ) {
-                    Column(modifier = Modifier.padding(14.dp)) {
+                    Column(modifier = Modifier.padding(16.dp)) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Column(modifier = Modifier.weight(1f)) {
-                                Text(text = course.nameEn, fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                                Text(text = course.nameUr, fontSize = 14.sp, color = EmeraldPrimary, fontWeight = FontWeight.SemiBold)
+                                Text(
+                                    text = course.nameEn,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 16.sp,
+                                    color = Color.White
+                                )
+                                Text(
+                                    text = course.nameUr,
+                                    fontSize = 14.sp,
+                                    color = Color(0xFFE5C07B),
+                                    fontWeight = FontWeight.SemiBold
+                                )
                             }
                             Row {
                                 IconButton(onClick = {
                                     courseToEdit = course
                                     showDialog = true
                                 }) {
-                                    Icon(Icons.Default.Edit, contentDescription = "Edit Course", tint = EmeraldPrimary, modifier = Modifier.size(20.dp))
+                                    Icon(Icons.Default.Edit, contentDescription = "Edit Course", tint = Color(0xFFE5C07B), modifier = Modifier.size(20.dp))
                                 }
                                 IconButton(onClick = { courseToDelete = course }) {
-                                    Icon(Icons.Default.Delete, contentDescription = "Delete Course", tint = Color(0xFFD32F2F), modifier = Modifier.size(20.dp))
+                                    Icon(Icons.Default.Delete, contentDescription = "Delete Course", tint = Color(0xFFFF8A80), modifier = Modifier.size(20.dp))
                                 }
                             }
                         }
                         Spacer(modifier = Modifier.height(4.dp))
-                        Text(text = course.description, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(text = "Instructor: ${course.teacherName}  |  Duration: ${course.duration}", fontSize = 11.5.sp)
-                        Text(text = "Monthly Fee: Rs. ${course.monthlyFee.toInt()}", fontSize = 11.5.sp, fontWeight = FontWeight.SemiBold, color = EmeraldPrimary)
+                        Text(
+                            text = course.description,
+                            fontSize = 12.sp,
+                            color = Color.White.copy(alpha = 0.8f)
+                        )
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Text(
+                            text = "Instructor: ${course.teacherName}  |  Duration: ${course.duration}",
+                            fontSize = 11.5.sp,
+                            color = Color.White.copy(alpha = 0.9f)
+                        )
+                        Text(
+                            text = "Monthly Fee: Rs. ${course.monthlyFee.toInt()}",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFFE5C07B)
+                        )
                     }
                 }
             }
@@ -1525,11 +1572,10 @@ fun ProfileSettingsSubScreen(
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
             // Live Preview Card (Emerald & Gold)
-            Card(
+            Madrassa3dCard(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFF042418)),
-                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                elevation = 6.dp
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(text = "LIVE EMBLEM PREVIEW", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color(0xFFE5C07B), letterSpacing = 1.sp)
@@ -1542,7 +1588,8 @@ fun ProfileSettingsSubScreen(
                             modifier = Modifier
                                 .size(64.dp)
                                 .clip(CircleShape)
-                                .background(Color(0xFF0E5B37)),
+                                .background(Brush.radialGradient(listOf(Color(0xFF1B6B4F), Color(0xFF042418))))
+                                .border(1.5.dp, Color(0xFFE5C07B), CircleShape),
                             contentAlignment = Alignment.Center
                         ) {
                             if (logoUri.isNotBlank()) {
@@ -1948,7 +1995,7 @@ fun RecycleBinSubScreen(
                             ) {
                                 Column {
                                     Text(text = tch.name, fontWeight = FontWeight.Bold)
-                                    Text(text = "${tch.role}  |  Dept: ${tch.assignedDepartment}", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    Text(text = "${tch.role}  |  Class: ${tch.assignedDepartment}", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                 }
                                 Button(
                                     onClick = { onRestoreTeacher(tch.id) },

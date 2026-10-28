@@ -1,8 +1,13 @@
 package com.example.ui.components
 
+import androidx.compose.animation.core.*
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -11,12 +16,13 @@ import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -25,6 +31,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import coil.compose.AsyncImage
 import com.example.R
 import com.example.data.model.Course
@@ -48,9 +55,31 @@ fun MadrassaEmblemTopBar(
     onLanguageToggle: () -> Unit = {},
     syncPill: @Composable (() -> Unit)? = null
 ) {
+    var show3dEmblemDialog by remember { mutableStateOf(false) }
+
+    val infiniteTransition = rememberInfiniteTransition(label = "topBar3d")
+    val floatAnim by infiniteTransition.animateFloat(
+        initialValue = -2.5f,
+        targetValue = 2.5f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(2200, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "emblemFloat"
+    )
+    val glowPulse by infiniteTransition.animateFloat(
+        initialValue = 0.25f,
+        targetValue = 0.65f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1800, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "emblemGlow"
+    )
+
     Surface(
         color = Color(0xFF062D1F),
-        shadowElevation = 4.dp
+        shadowElevation = 6.dp
     ) {
         Column(
             modifier = Modifier
@@ -72,16 +101,27 @@ fun MadrassaEmblemTopBar(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                // Left: Emblem / Logo + Titles
+                // Left: 3D Animated Emblem / Logo + Titles
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.weight(1f)
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(46.dp)
+                            .size(48.dp)
+                            .graphicsLayer {
+                                translationY = floatAnim
+                            }
                             .clip(CircleShape)
-                            .background(Color(0xFFD4AF37).copy(alpha = 0.2f)),
+                            .background(Color(0xFFE5C07B).copy(alpha = glowPulse))
+                            .border(
+                                1.5.dp,
+                                Brush.linearGradient(
+                                    listOf(Color(0xFFE5C07B), Color(0xFF0E6647), Color(0xFFE5C07B))
+                                ),
+                                CircleShape
+                            )
+                            .clickable { show3dEmblemDialog = true },
                         contentAlignment = Alignment.Center
                     ) {
                         if (logoUri.isNotBlank()) {
@@ -107,25 +147,26 @@ fun MadrassaEmblemTopBar(
 
                     Spacer(modifier = Modifier.width(10.dp))
 
-                    Column {
+                    Column(modifier = Modifier.weight(1f)) {
                         Text(
                             text = if (LanguageState.isUrdu) madrassaNameAr else madrassaNameEn,
-                            fontSize = 15.sp,
+                            fontSize = 13.5.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color(0xFFE5C07B),
-                            maxLines = 1,
+                            maxLines = 2,
+                            lineHeight = 17.sp,
                             overflow = TextOverflow.Ellipsis
                         )
                         Text(
                             text = madrassaSubtitleAr,
-                            fontSize = 10.5.sp,
+                            fontSize = 10.sp,
                             color = Color.White.copy(alpha = 0.85f),
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
                         Text(
                             text = if (LanguageState.isUrdu) madrassaNameEn else madrassaNameAr,
-                            fontSize = 11.sp,
+                            fontSize = 10.5.sp,
                             color = Color.White.copy(alpha = 0.9f),
                             fontWeight = FontWeight.Medium,
                             maxLines = 1,
@@ -137,7 +178,7 @@ fun MadrassaEmblemTopBar(
                 // Right: Sync Pill + Language Switcher + Profile Avatar
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     if (syncPill != null) {
                         syncPill()
@@ -148,23 +189,21 @@ fun MadrassaEmblemTopBar(
                             .clip(RoundedCornerShape(8.dp))
                             .background(Color(0xFFE5C07B).copy(alpha = 0.22f))
                             .clickable { onLanguageToggle() }
-                            .padding(horizontal = 8.dp, vertical = 5.dp),
+                            .padding(horizontal = 7.dp, vertical = 4.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
                             text = if (LanguageState.isUrdu) "English" else "اردو",
-                            fontSize = 11.sp,
+                            fontSize = 10.5.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color(0xFFE5C07B)
                         )
                     }
 
-                    Spacer(modifier = Modifier.width(8.dp))
-
                     // Profile Avatar with Gold Ring Border
                     Box(
                         modifier = Modifier
-                            .size(38.dp)
+                            .size(36.dp)
                             .clip(CircleShape)
                             .background(Color(0xFFD4AF37).copy(alpha = 0.35f))
                             .clickable { onProfileClick() }
@@ -182,7 +221,7 @@ fun MadrassaEmblemTopBar(
                                 imageVector = Icons.Default.Person,
                                 contentDescription = "Profile",
                                 tint = Color(0xFFE5C07B),
-                                modifier = Modifier.size(22.dp)
+                                modifier = Modifier.size(20.dp)
                             )
                         }
                     }
@@ -240,78 +279,344 @@ fun MadrassaEmblemTopBar(
             }
         }
     }
+
+    if (show3dEmblemDialog) {
+        Madrassa3dEmblemDialog(
+            nameAr = madrassaNameAr,
+            nameEn = madrassaNameEn,
+            onDismiss = { show3dEmblemDialog = false }
+        )
+    }
+}
+
+@Composable
+fun Madrassa3dEmblemDialog(
+    nameAr: String,
+    nameEn: String,
+    onDismiss: () -> Unit
+) {
+    val infiniteTransition = rememberInfiniteTransition(label = "emblem3dSpin")
+    val rotationAngle by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 360f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(12000, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "spin"
+    )
+    val floatY by infiniteTransition.animateFloat(
+        initialValue = -6f,
+        targetValue = 6f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(2400, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "float3d"
+    )
+    val glowSize by infiniteTransition.animateFloat(
+        initialValue = 0.5f,
+        targetValue = 0.9f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1600, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "glow"
+    )
+
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            shape = RoundedCornerShape(24.dp),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFF042418)),
+            border = androidx.compose.foundation.BorderStroke(
+                2.dp,
+                Brush.linearGradient(
+                    colors = listOf(
+                        Color(0xFFE5C07B),
+                        Color(0xFF8B7330),
+                        Color(0xFFE5C07B),
+                        Color(0xFF0E6647)
+                    )
+                )
+            ),
+            elevation = CardDefaults.cardElevation(defaultElevation = 12.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                // 3D Animated Floating & Rotating Emblem
+                Box(
+                    modifier = Modifier
+                        .size(130.dp)
+                        .graphicsLayer {
+                            translationY = floatY
+                            rotationY = rotationAngle
+                            cameraDistance = 18f * density
+                        },
+                    contentAlignment = Alignment.Center
+                ) {
+                    // Pulsing Gold Halo
+                    Box(
+                        modifier = Modifier
+                            .size((115 * glowSize).dp)
+                            .clip(CircleShape)
+                            .background(
+                                Brush.radialGradient(
+                                    colors = listOf(
+                                        Color(0xFFE5C07B).copy(alpha = 0.45f),
+                                        Color.Transparent
+                                    )
+                                )
+                            )
+                    )
+
+                    // 3D Layered Golden Emblem
+                    Box(
+                        modifier = Modifier
+                            .size(100.dp)
+                            .clip(CircleShape)
+                            .background(
+                                Brush.linearGradient(
+                                    listOf(Color(0xFF0B4A33), Color(0xFF032216))
+                                )
+                            )
+                            .border(
+                                2.5.dp,
+                                Brush.linearGradient(
+                                    listOf(Color(0xFFE5C07B), Color(0xFFFFF0C2), Color(0xFFD4AF37))
+                                ),
+                                CircleShape
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.ic_madrassa_gold_emblem),
+                            contentDescription = "3D Emblem",
+                            modifier = Modifier
+                                .size(88.dp)
+                                .clip(CircleShape),
+                            contentScale = ContentScale.Crop
+                        )
+                    }
+                }
+
+                // Titles
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = nameAr,
+                        fontSize = 19.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFFE5C07B),
+                        textAlign = TextAlign.Center
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = nameEn,
+                        fontSize = 13.sp,
+                        color = Color.White,
+                        fontWeight = FontWeight.Medium,
+                        textAlign = TextAlign.Center
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Surface(
+                        shape = RoundedCornerShape(20.dp),
+                        color = Color(0xFFE5C07B).copy(alpha = 0.15f),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFE5C07B).copy(alpha = 0.5f))
+                    ) {
+                        Text(
+                            text = "★ 3D ISLAMIC INSTITUTION SEAL ★",
+                            fontSize = 10.5.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFFE5C07B),
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                        )
+                    }
+                }
+
+                Text(
+                    text = "Offline SQLite Enterprise Engine with Real-Time Firebase Cloud Synchronization & Islamic Education Modules.",
+                    fontSize = 11.sp,
+                    color = Color.White.copy(alpha = 0.8f),
+                    textAlign = TextAlign.Center
+                )
+
+                Button(
+                    onClick = onDismiss,
+                    colors = ButtonDefaults.buttonColors(containerColor = EmeraldPrimary),
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text("Close (بند کریں)")
+                }
+            }
+        }
+    }
 }
 
 @Composable
 fun MadrassaHeroGreetingCard(
-    adminName: String = "Admin"
+    adminName: String = "Admin",
+    modifier: Modifier = Modifier
 ) {
+    val infiniteTransition = rememberInfiniteTransition(label = "hero3d")
+    val goldShimmer by infiniteTransition.animateFloat(
+        initialValue = 0.6f,
+        targetValue = 1.0f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(2400, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "heroGoldGlow"
+    )
+    val floatY by infiniteTransition.animateFloat(
+        initialValue = -2f,
+        targetValue = 2f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(3000, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "heroFloat"
+    )
+
     Card(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp),
-        shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        shape = RoundedCornerShape(22.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
     ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(130.dp)
-        ) {
-            Image(
-                painter = painterResource(id = R.drawable.bg_madrassa_hero_banner),
-                contentDescription = "Quran Hero Banner",
-                modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.Crop
-            )
-
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        Brush.horizontalGradient(
-                            colors = listOf(
-                                Color(0xFF042418).copy(alpha = 0.92f),
-                                Color(0xFF063323).copy(alpha = 0.82f),
-                                Color(0x660B4A33)
-                            )
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(
+                            Color(0xFF0F5A3E),
+                            Color(0xFF083824),
+                            Color(0xFF031E13)
                         )
                     )
-            )
-
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.Center
+                )
+                .border(
+                    width = 1.5.dp,
+                    brush = Brush.linearGradient(
+                        colors = listOf(
+                            Color(0xFFE5C07B).copy(alpha = goldShimmer),
+                            Color(0xFF8B6B23).copy(alpha = 0.5f),
+                            Color(0xFFD4AF37).copy(alpha = goldShimmer * 0.8f)
+                        )
+                    ),
+                    shape = RoundedCornerShape(22.dp)
+                )
+                .padding(18.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text(
-                    text = t("greeting"),
-                    fontSize = 19.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFFE5C07B)
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = t("app_tagline"),
-                    fontSize = 12.5.sp,
-                    color = Color.White.copy(alpha = 0.95f),
-                    fontWeight = FontWeight.Medium
-                )
-                Spacer(modifier = Modifier.height(6.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(
-                        modifier = Modifier
-                            .size(8.dp)
-                            .clip(CircleShape)
-                            .background(Color(0xFF4CAF50))
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
+                // Left Column: Greetings & Calligraphy
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    // Bismillah Header
                     Text(
-                        text = t("online_ready"),
-                        fontSize = 11.sp,
-                        color = Color(0xFFB0DEC4),
-                        fontWeight = FontWeight.SemiBold
+                        text = "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ",
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFFE5C07B),
+                        letterSpacing = 0.5.sp
+                    )
+
+                    Spacer(modifier = Modifier.height(2.dp))
+
+                    Text(
+                        text = if (LanguageState.isUrdu) "السلام عليكم ورحمة الله" else "As-Salamu 'Alaykum",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = Color.White
+                    )
+
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Surface(
+                            shape = RoundedCornerShape(12.dp),
+                            color = Color(0xFFD4AF37).copy(alpha = 0.2f),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFE5C07B).copy(alpha = 0.4f))
+                        ) {
+                            Text(
+                                text = "★ $adminName",
+                                fontSize = 11.5.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = Color(0xFFFFF0C2),
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.5.dp)
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.width(8.dp))
+
+                        Text(
+                            text = if (LanguageState.isUrdu) "خوش آمدید" else "Welcome to Portal",
+                            fontSize = 12.sp,
+                            color = Color.White.copy(alpha = 0.85f),
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(4.dp))
+
+                    Text(
+                        text = "رَّبِّ زِدْنِي عِلْمًا  •  (My Lord, increase me in knowledge)",
+                        fontSize = 10.5.sp,
+                        color = Color(0xFFE5C07B).copy(alpha = 0.9f),
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(12.dp))
+
+                // Right: 3D Mihrab Arch Emblem with Quran / Rehal Motif
+                Box(
+                    modifier = Modifier
+                        .size(76.dp)
+                        .graphicsLayer {
+                            translationY = floatY
+                            rotationZ = floatY * 0.5f
+                        }
+                        .clip(RoundedCornerShape(topStart = 38.dp, topEnd = 38.dp, bottomStart = 16.dp, bottomEnd = 16.dp))
+                        .background(
+                            Brush.verticalGradient(
+                                colors = listOf(
+                                    Color(0xFFE5C07B).copy(alpha = 0.35f),
+                                    Color(0xFF042718),
+                                    Color(0xFF02170E)
+                                )
+                            )
+                        )
+                        .border(
+                            2.dp,
+                            Brush.linearGradient(
+                                listOf(Color(0xFFFFF0C2), Color(0xFFD4AF37), Color(0xFF8B6B23))
+                            ),
+                            RoundedCornerShape(topStart = 38.dp, topEnd = 38.dp, bottomStart = 16.dp, bottomEnd = 16.dp)
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.ic_madrassa_gold_emblem),
+                        contentDescription = "Quran Rehal Emblem",
+                        modifier = Modifier
+                            .size(54.dp)
+                            .clip(CircleShape),
+                        contentScale = ContentScale.Crop
                     )
                 }
             }
@@ -328,62 +633,194 @@ fun DashboardMetricCard(
     modifier: Modifier = Modifier,
     onClick: () -> Unit = {}
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.93f else 1.0f,
+        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessLow),
+        label = "metricScale"
+    )
+    val pressTiltX by animateFloatAsState(
+        targetValue = if (isPressed) 4f else 0f,
+        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessLow),
+        label = "pressTiltX"
+    )
+    val elevation by animateDpAsState(
+        targetValue = if (isPressed) 2.dp else 6.dp,
+        label = "metricElevation"
+    )
+
+    val infiniteTransition = rememberInfiniteTransition(label = "metric3dAmbient")
+    val ambientTiltY by infiniteTransition.animateFloat(
+        initialValue = -2.5f,
+        targetValue = 2.5f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(3200, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "ambientTiltY"
+    )
+    val ambientTiltX by infiniteTransition.animateFloat(
+        initialValue = 1.2f,
+        targetValue = -1.2f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(2800, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "ambientTiltX"
+    )
+    val sheenProgress by infiniteTransition.animateFloat(
+        initialValue = -0.5f,
+        targetValue = 1.5f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(3600, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "sheenProgress"
+    )
+    val borderGlow by infiniteTransition.animateFloat(
+        initialValue = 0.5f,
+        targetValue = 0.95f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(2600, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "borderGlow"
+    )
+
     Card(
         modifier = modifier
-            .clip(RoundedCornerShape(14.dp))
-            .clickable { onClick() },
-        shape = RoundedCornerShape(14.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.5.dp)
+            .graphicsLayer {
+                cameraDistance = 14f * density
+                rotationX = pressTiltX + ambientTiltX
+                rotationY = ambientTiltY
+                scaleX = scale
+                scaleY = scale
+            }
+            .clip(RoundedCornerShape(18.dp))
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null
+            ) { onClick() },
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
+        elevation = CardDefaults.cardElevation(defaultElevation = elevation),
+        border = androidx.compose.foundation.BorderStroke(
+            1.4.dp,
+            Brush.linearGradient(
+                colors = listOf(
+                    Color(0xFFFFF0C2).copy(alpha = borderGlow),
+                    Color(0xFFE5C07B).copy(alpha = borderGlow * 0.9f),
+                    Color(0xFF0E6647).copy(alpha = 0.45f),
+                    Color(0xFF8B6B23).copy(alpha = 0.7f),
+                    Color(0xFFE5C07B).copy(alpha = borderGlow)
+                )
+            )
+        )
     ) {
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(
+                            Color(0xFF0F5A3E),
+                            Color(0xFF073824),
+                            Color(0xFF021B11)
+                        )
+                    )
+                )
                 .padding(14.dp)
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = title,
-                    fontSize = 12.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    fontWeight = FontWeight.Medium
-                )
-                Box(
-                    modifier = Modifier
-                        .size(34.dp)
-                        .clip(CircleShape)
-                        .background(Color(0xFFE8F4EC)),
-                    contentAlignment = Alignment.Center
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(
-                        imageVector = icon,
-                        contentDescription = title,
-                        tint = EmeraldPrimary,
-                        modifier = Modifier.size(18.dp)
+                    Text(
+                        text = title,
+                        fontSize = 12.sp,
+                        color = Color.White.copy(alpha = 0.9f),
+                        fontWeight = FontWeight.Medium
+                    )
+                    // 3D Embossed Radial Golden Orb
+                    Box(
+                        modifier = Modifier
+                            .size(38.dp)
+                            .clip(CircleShape)
+                            .background(
+                                Brush.radialGradient(
+                                    colors = listOf(
+                                        Color(0xFF1E7052),
+                                        Color(0xFF04291B)
+                                    )
+                                )
+                            )
+                            .border(1.5.dp, Color(0xFFE5C07B).copy(alpha = 0.85f), CircleShape),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = icon,
+                            contentDescription = title,
+                            tint = Color(0xFFE5C07B),
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Text(
+                    text = value,
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = Color(0xFFFFF0C2)
+                )
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .size(6.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFFE5C07B))
+                    )
+                    Spacer(modifier = Modifier.width(5.dp))
+                    Text(
+                        text = trendText,
+                        fontSize = 10.5.sp,
+                        color = Color(0xFFE5C07B).copy(alpha = 0.9f),
+                        fontWeight = FontWeight.SemiBold
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(6.dp))
-
-            Text(
-                text = value,
-                fontSize = 22.sp,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-
-            Spacer(modifier = Modifier.height(2.dp))
-
-            Text(
-                text = trendText,
-                fontSize = 10.5.sp,
-                color = EmeraldPrimary,
-                fontWeight = FontWeight.SemiBold
+            // Dynamic 3D metallic light reflection sweeping across the card
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .background(
+                        Brush.linearGradient(
+                            colors = listOf(
+                                Color.Transparent,
+                                Color(0xFFFFF0C2).copy(alpha = 0.05f),
+                                Color(0xFFE5C07B).copy(alpha = 0.14f),
+                                Color(0xFFFFF0C2).copy(alpha = 0.05f),
+                                Color.Transparent
+                            ),
+                            start = androidx.compose.ui.geometry.Offset(
+                                x = sheenProgress * 600f,
+                                y = 0f
+                            ),
+                            end = androidx.compose.ui.geometry.Offset(
+                                x = (sheenProgress + 0.35f) * 600f,
+                                y = 400f
+                            )
+                        )
+                    )
             )
         }
     }
@@ -398,15 +835,92 @@ fun TodayAttendanceDarkCard(
     lateCount: Int,
     onClick: () -> Unit = {}
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.94f else 1.0f,
+        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessLow),
+        label = "attCardScale"
+    )
+    val pressTiltX by animateFloatAsState(
+        targetValue = if (isPressed) 3.5f else 0f,
+        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessLow),
+        label = "pressTiltX"
+    )
+    val elevation by animateDpAsState(
+        targetValue = if (isPressed) 2.dp else 8.dp,
+        label = "attCardElev"
+    )
+
+    val infiniteTransition = rememberInfiniteTransition(label = "dark3d")
+    val ambientTiltY by infiniteTransition.animateFloat(
+        initialValue = -1.8f,
+        targetValue = 1.8f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(3400, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "ambientTiltY"
+    )
+    val ambientTiltX by infiniteTransition.animateFloat(
+        initialValue = 1.0f,
+        targetValue = -1.0f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(3000, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "ambientTiltX"
+    )
+    val sheenProgress by infiniteTransition.animateFloat(
+        initialValue = -0.5f,
+        targetValue = 1.5f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(3800, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "sheenProgress"
+    )
+    val goldPulse by infiniteTransition.animateFloat(
+        initialValue = 0.5f,
+        targetValue = 0.95f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(2600, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "goldPulse"
+    )
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
-            .clip(RoundedCornerShape(16.dp))
-            .clickable { onClick() },
-        shape = RoundedCornerShape(16.dp),
+            .graphicsLayer {
+                cameraDistance = 14f * density
+                rotationX = pressTiltX + ambientTiltX
+                rotationY = ambientTiltY
+                scaleX = scale
+                scaleY = scale
+            }
+            .clip(RoundedCornerShape(18.dp))
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null
+            ) { onClick() },
+        shape = RoundedCornerShape(18.dp),
         colors = CardDefaults.cardColors(containerColor = Color(0xFF042418)),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = elevation),
+        border = androidx.compose.foundation.BorderStroke(
+            1.5.dp,
+            Brush.linearGradient(
+                colors = listOf(
+                    Color(0xFFFFF0C2).copy(alpha = goldPulse),
+                    Color(0xFFE5C07B).copy(alpha = goldPulse),
+                    Color(0xFF8B7330),
+                    Color(0xFF0E6647),
+                    Color(0xFFE5C07B).copy(alpha = goldPulse)
+                )
+            )
+        )
     ) {
         Column(
             modifier = Modifier
@@ -568,6 +1082,8 @@ fun QuickActionsSection(
     onNavigateToTeachers: () -> Unit,
     onNavigateToReports: () -> Unit,
     onNavigateToCourses: () -> Unit,
+    onCloudBackupClick: () -> Unit = {},
+    cloudSyncBadge: String? = null,
     modifier: Modifier = Modifier
 ) {
     Column(modifier = modifier.padding(horizontal = 16.dp)) {
@@ -614,7 +1130,13 @@ fun QuickActionsSection(
             QuickActionButton(title = t("exams"), icon = Icons.Default.Assignment, badge = null, modifier = Modifier.weight(1f), onClick = onNavigateToExams)
             QuickActionButton(title = t("asatiza"), icon = Icons.Default.Person, badge = null, modifier = Modifier.weight(1f), onClick = onNavigateToTeachers)
             QuickActionButton(title = t("classes"), icon = Icons.Default.Class, badge = null, modifier = Modifier.weight(1f), onClick = onNavigateToCourses)
-            QuickActionButton(title = t("pdf_backup"), icon = Icons.Default.BarChart, badge = null, modifier = Modifier.weight(1f), onClick = onNavigateToReports)
+            QuickActionButton(
+                title = if (LanguageState.isUrdu) "کلاؤڈ بیک اپ" else "Cloud Sync",
+                icon = Icons.Default.CloudSync,
+                badge = cloudSyncBadge,
+                modifier = Modifier.weight(1f),
+                onClick = onCloudBackupClick
+            )
         }
     }
 }
@@ -627,16 +1149,65 @@ fun QuickActionButton(
     modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.91f else 1.0f,
+        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessLow),
+        label = "btnScale"
+    )
+    val pressTiltX by animateFloatAsState(
+        targetValue = if (isPressed) 3f else 0f,
+        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessLow),
+        label = "pressTiltX"
+    )
+    val elevation by animateDpAsState(
+        targetValue = if (isPressed) 1.dp else 4.dp,
+        label = "btnElev"
+    )
+
     Card(
         modifier = modifier
-            .height(84.dp)
-            .clip(RoundedCornerShape(12.dp))
-            .clickable { onClick() },
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+            .height(86.dp)
+            .graphicsLayer {
+                cameraDistance = 12f * density
+                rotationX = pressTiltX
+                scaleX = scale
+                scaleY = scale
+            }
+            .clip(RoundedCornerShape(14.dp))
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null
+            ) { onClick() },
+        shape = RoundedCornerShape(14.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
+        elevation = CardDefaults.cardElevation(defaultElevation = elevation),
+        border = BorderStroke(
+            1.2.dp,
+            Brush.linearGradient(
+                listOf(
+                    Color(0xFFFFF0C2).copy(alpha = 0.6f),
+                    Color(0xFFE5C07B).copy(alpha = 0.8f),
+                    Color(0xFF0E6647),
+                    Color(0xFF8B6B23)
+                )
+            )
+        )
     ) {
-        Box(modifier = Modifier.fillMaxSize()) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.verticalGradient(
+                        listOf(
+                            Color(0xFF0D5037),
+                            Color(0xFF052B1C)
+                        )
+                    )
+                )
+        ) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -644,18 +1215,24 @@ fun QuickActionButton(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
+                // 3D Embossed Icon Orb
                 Box(
                     modifier = Modifier
                         .size(36.dp)
                         .clip(CircleShape)
-                        .background(Color(0xFFE8F4EC)),
+                        .background(
+                            Brush.radialGradient(
+                                listOf(Color(0xFF1E7052), Color(0xFF04291B))
+                            )
+                        )
+                        .border(1.2.dp, Color(0xFFE5C07B).copy(alpha = 0.85f), CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = icon,
                         contentDescription = title,
-                        tint = EmeraldPrimary,
-                        modifier = Modifier.size(18.dp)
+                        tint = Color(0xFFE5C07B),
+                        modifier = Modifier.size(19.dp)
                     )
                 }
 
@@ -664,7 +1241,8 @@ fun QuickActionButton(
                 Text(
                     text = title,
                     fontSize = 11.sp,
-                    fontWeight = FontWeight.Medium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color.White,
                     textAlign = TextAlign.Center,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
@@ -676,9 +1254,10 @@ fun QuickActionButton(
                     modifier = Modifier
                         .padding(top = 4.dp, end = 6.dp)
                         .align(Alignment.TopEnd)
-                        .size(14.dp)
+                        .size(15.dp)
                         .clip(CircleShape)
-                        .background(Color(0xFFE53935)),
+                        .background(Color(0xFFE53935))
+                        .border(1.dp, Color(0xFFFFF0C2), CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(text = badge, fontSize = 8.5.sp, fontWeight = FontWeight.Bold, color = Color.White)
@@ -703,68 +1282,103 @@ fun StudentProgressGaugesSection(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.5.dp)
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
+        elevation = CardDefaults.cardElevation(defaultElevation = 5.dp),
+        border = BorderStroke(
+            1.2.dp,
+            Brush.linearGradient(
+                listOf(
+                    Color(0xFFFFF0C2).copy(alpha = 0.7f),
+                    Color(0xFFE5C07B).copy(alpha = 0.85f),
+                    Color(0xFF0E6647),
+                    Color(0xFF8B6B23)
+                )
+            )
+        )
     ) {
-        Column(modifier = Modifier.padding(14.dp)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Default.Groups,
-                        contentDescription = null,
-                        tint = EmeraldPrimary,
-                        modifier = Modifier.size(18.dp)
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(
+                    Brush.verticalGradient(
+                        listOf(
+                            Color(0xFF0F5A3E),
+                            Color(0xFF083824),
+                            Color(0xFF021B11)
+                        )
                     )
-                    Spacer(modifier = Modifier.width(6.dp))
+                )
+                .padding(16.dp)
+        ) {
+            Column {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier
+                                .size(28.dp)
+                                .clip(CircleShape)
+                                .background(Brush.radialGradient(listOf(Color(0xFF1E7052), Color(0xFF04291B))))
+                                .border(1.dp, Color(0xFFE5C07B), CircleShape),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Groups,
+                                contentDescription = null,
+                                tint = Color(0xFFE5C07B),
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = t("student_progress"),
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, color = Color.White)
+                        )
+                    }
+
                     Text(
-                        text = t("student_progress"),
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                        text = t("view_all"),
+                        fontSize = 12.sp,
+                        color = Color(0xFFE5C07B),
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.clickable { onViewAllClick() }
                     )
                 }
 
-                Text(
-                    text = t("view_all"),
-                    fontSize = 12.sp,
-                    color = EmeraldPrimary,
-                    fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.clickable { onViewAllClick() }
-                )
-            }
+                Spacer(modifier = Modifier.height(14.dp))
 
-            Spacer(modifier = Modifier.height(14.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    ProgressGaugeItem(
+                        label = t("hifz"),
+                        percentage = hifzPercentage,
+                        countText = hifzCount,
+                        icon = Icons.AutoMirrored.Filled.MenuBook,
+                        progressColor = Color(0xFFE5C07B)
+                    )
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
-                ProgressGaugeItem(
-                    label = t("hifz"),
-                    percentage = hifzPercentage,
-                    countText = hifzCount,
-                    icon = Icons.AutoMirrored.Filled.MenuBook,
-                    progressColor = EmeraldPrimary
-                )
+                    ProgressGaugeItem(
+                        label = t("nazra"),
+                        percentage = naziraPercentage,
+                        countText = naziraCount,
+                        icon = Icons.Default.Book,
+                        progressColor = Color(0xFF4DD0E1)
+                    )
 
-                ProgressGaugeItem(
-                    label = t("nazra"),
-                    percentage = naziraPercentage,
-                    countText = naziraCount,
-                    icon = Icons.Default.Book,
-                    progressColor = Color(0xFF1976D2)
-                )
-
-                ProgressGaugeItem(
-                    label = t("qaida"),
-                    percentage = qaidaPercentage,
-                    countText = qaidaCount,
-                    icon = Icons.Default.AccountBalance,
-                    progressColor = Color(0xFF00796B)
-                )
+                    ProgressGaugeItem(
+                        label = t("qaida"),
+                        percentage = qaidaPercentage,
+                        countText = qaidaCount,
+                        icon = Icons.Default.AccountBalance,
+                        progressColor = Color(0xFF81C784)
+                    )
+                }
             }
         }
     }
@@ -822,36 +1436,44 @@ fun ClassesAndActivitySection(
         // Left Column: Real Classes from Database
         Card(
             modifier = Modifier.weight(1f),
-            shape = RoundedCornerShape(14.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.Transparent),
+            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+            border = BorderStroke(1.2.dp, Brush.linearGradient(listOf(Color(0xFFFFF0C2).copy(alpha = 0.6f), Color(0xFFE5C07B).copy(alpha = 0.7f), Color(0xFF0E6647))))
         ) {
-            Column(modifier = Modifier.padding(12.dp)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(text = t("todays_classes"), fontWeight = FontWeight.Bold, fontSize = 12.sp)
-                    Text(text = t("view_all"), fontSize = 10.sp, color = EmeraldPrimary, modifier = Modifier.clickable { onViewClassesClick() })
-                }
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Brush.verticalGradient(listOf(Color(0xFF0F5A3E), Color(0xFF073824), Color(0xFF021B11))))
+                    .padding(12.dp)
+            ) {
+                Column {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(text = t("todays_classes"), fontWeight = FontWeight.Bold, fontSize = 12.sp, color = Color.White)
+                        Text(text = t("view_all"), fontSize = 10.sp, color = Color(0xFFE5C07B), fontWeight = FontWeight.Bold, modifier = Modifier.clickable { onViewClassesClick() })
+                    }
 
-                Spacer(modifier = Modifier.height(10.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
 
-                if (courses.isEmpty()) {
-                    Text(
-                        text = t("no_classes_yet"),
-                        fontSize = 11.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(vertical = 12.dp)
-                    )
-                } else {
-                    courses.take(4).forEachIndexed { idx, crs ->
-                        ClassScheduleItem(
-                            time = crs.duration,
-                            name = if (LanguageState.isUrdu && crs.nameUr.isNotBlank()) crs.nameUr else crs.nameEn,
-                            isOngoing = idx == 0
+                    if (courses.isEmpty()) {
+                        Text(
+                            text = t("no_classes_yet"),
+                            fontSize = 11.sp,
+                            color = Color.White.copy(alpha = 0.7f),
+                            modifier = Modifier.padding(vertical = 12.dp)
                         )
+                    } else {
+                        courses.take(4).forEachIndexed { idx, crs ->
+                            ClassScheduleItem(
+                                time = crs.duration,
+                                name = if (LanguageState.isUrdu && crs.nameUr.isNotBlank()) crs.nameUr else crs.nameEn,
+                                isOngoing = idx == 0
+                            )
+                        }
                     }
                 }
             }
@@ -860,38 +1482,46 @@ fun ClassesAndActivitySection(
         // Right Column: Real Recent Activity from Database
         Card(
             modifier = Modifier.weight(1f),
-            shape = RoundedCornerShape(14.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.Transparent),
+            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+            border = BorderStroke(1.2.dp, Brush.linearGradient(listOf(Color(0xFFFFF0C2).copy(alpha = 0.6f), Color(0xFFE5C07B).copy(alpha = 0.7f), Color(0xFF0E6647))))
         ) {
-            Column(modifier = Modifier.padding(12.dp)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(text = t("recent_activity"), fontWeight = FontWeight.Bold, fontSize = 12.sp)
-                    Text(text = t("view_all"), fontSize = 10.sp, color = EmeraldPrimary, modifier = Modifier.clickable { onViewActivityClick() })
-                }
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Brush.verticalGradient(listOf(Color(0xFF0F5A3E), Color(0xFF073824), Color(0xFF021B11))))
+                    .padding(12.dp)
+            ) {
+                Column {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(text = t("recent_activity"), fontWeight = FontWeight.Bold, fontSize = 12.sp, color = Color.White)
+                        Text(text = t("view_all"), fontSize = 10.sp, color = Color(0xFFE5C07B), fontWeight = FontWeight.Bold, modifier = Modifier.clickable { onViewActivityClick() })
+                    }
 
-                Spacer(modifier = Modifier.height(10.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
 
-                if (recentStudents.isEmpty()) {
-                    Text(
-                        text = t("no_activity_yet"),
-                        fontSize = 11.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(vertical = 12.dp)
-                    )
-                } else {
-                    recentStudents.take(4).forEach { st ->
-                        RecentActivityItem(
-                            title = "${st.name} (${st.rollNo})",
-                            sub = "${st.department} • ${st.campus}",
-                            time = st.admissionDate,
-                            iconBg = EmeraldPrimary,
-                            icon = Icons.Default.Person
+                    if (recentStudents.isEmpty()) {
+                        Text(
+                            text = t("no_activity_yet"),
+                            fontSize = 11.sp,
+                            color = Color.White.copy(alpha = 0.7f),
+                            modifier = Modifier.padding(vertical = 12.dp)
                         )
+                    } else {
+                        recentStudents.take(4).forEach { st ->
+                            RecentActivityItem(
+                                title = "${st.name} (${st.rollNo})",
+                                sub = "${st.department} • ${st.campus}",
+                                time = st.admissionDate,
+                                iconBg = EmeraldPrimary,
+                                icon = Icons.Default.Person
+                            )
+                        }
                     }
                 }
             }

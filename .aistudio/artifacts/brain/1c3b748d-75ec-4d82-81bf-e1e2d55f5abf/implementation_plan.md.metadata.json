@@ -1,6 +1,6 @@
 {
-  "summary":  "Implementation plan for professional Online + Offline database synchronization between Room local storage and Firebase Cloud Firestore, featuring automatic background sync on reconnect, manual Sync Now action, latest-timestamp conflict resolution, network connectivity observer, and top header sync status pill.",
-  "updatedAt":  "2026-10-22T03:18:47.879840183Z",
+  "summary":  "Comprehensive architectural implementation plan for:\n1. Students Screen Enhanced Scrolling: Smooth collapsible top metrics and search bar with an animated floating 'Scroll to Top' quick-jump button.\n2. In-App Internal Photo & Storage Manager: Visual photo browser and organizer accessible from More Menu and Student Profile to view, preview, change, export, and clean up student photos, teacher photos, and madrassa logos stored offline in internal app files directory.\n3. Universal 3D Dashboard UI Overhaul across Remaining Screens: Upgrading Student Detail Screen, Exams & Marksheet Screens, Courses & Classes Management, and Settings to luxury deep emerald & gold 3D animated cards with spring press physics and glowing rim bevels.",
+  "updatedAt":  "2026-10-26T11:20:30.637425549Z",
   "requestFeedback":  true,
   "userFacing":  true
 }

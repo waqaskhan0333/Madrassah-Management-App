@@ -151,4 +151,62 @@ object ImageStorageHelper {
             false
         }
     }
+
+    data class StoredPhotoInfo(
+        val file: File,
+        val folder: String,
+        val fileName: String,
+        val path: String,
+        val sizeBytes: Long,
+        val lastModified: Long
+    )
+
+    /**
+     * Lists all photo files in a given subfolder.
+     */
+    fun getPhotosInFolder(context: Context, folderName: String): List<StoredPhotoInfo> {
+        return try {
+            val dir = File(context.filesDir, folderName)
+            if (!dir.exists() || !dir.isDirectory) return emptyList()
+            dir.listFiles { f ->
+                val name = f.name.lowercase()
+                f.isFile && (name.endsWith(".jpg") || name.endsWith(".jpeg") || name.endsWith(".png") || name.endsWith(".webp"))
+            }?.map { file ->
+                StoredPhotoInfo(
+                    file = file,
+                    folder = folderName,
+                    fileName = file.name,
+                    path = file.absolutePath,
+                    sizeBytes = file.length(),
+                    lastModified = file.lastModified()
+                )
+            }?.sortedByDescending { it.lastModified } ?: emptyList()
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
+    /**
+     * Computes the total byte size of stored images across all default image folders.
+     */
+    fun getTotalStorageSizeBytes(context: Context): Long {
+        val folders = listOf("student_photos", "teacher_photos", "madrassa_logos", "reports")
+        var total = 0L
+        for (folder in folders) {
+            val list = getPhotosInFolder(context, folder)
+            total += list.sumOf { it.sizeBytes }
+        }
+        return total
+    }
+
+    /**
+     * Formats bytes to human-readable string (e.g. 1.2 MB or 450 KB).
+     */
+    fun formatFileSize(bytes: Long): String {
+        return when {
+            bytes >= 1024 * 1024 -> String.format(java.util.Locale.US, "%.1f MB", bytes / (1024f * 1024f))
+            bytes >= 1024 -> String.format(java.util.Locale.US, "%.1f KB", bytes / 1024f)
+            else -> "$bytes B"
+        }
+    }
 }

@@ -6,6 +6,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -24,6 +25,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -31,6 +33,10 @@ import androidx.compose.ui.unit.sp
 import com.example.ui.components.AttendanceSheetPreviewDialog
 import com.example.ui.components.BiometricAttendanceDialog
 import com.example.ui.components.FullCalendarAttendanceView
+import com.example.ui.components.Madrassa3dBadge
+import com.example.ui.components.Madrassa3dCard
+import com.example.ui.components.Madrassa3dMetricTile
+import com.example.ui.components.SyncStatusPill
 import com.example.ui.theme.*
 import com.example.ui.viewmodel.MadrassaViewModel
 import com.example.util.UserRoleManager
@@ -137,13 +143,13 @@ fun AttendanceScreen(
         ) {
             // 1. Top Hero Banner styled like Home page
             item {
-                Card(
+                Madrassa3dCard(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(14.dp),
                     shape = RoundedCornerShape(18.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFF042418)),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                    elevation = 6.dp,
+                    gradientColors = listOf(Color(0xFF0F5A3E), Color(0xFF083824), Color(0xFF031E13))
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         Row(
@@ -166,8 +172,13 @@ fun AttendanceScreen(
                                 )
                             }
 
-                            // Biometric & Print Quick Buttons
-                            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            // Sync Status & Quick Buttons
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                SyncStatusPill(viewModel = viewModel)
+
                                 IconButton(
                                     onClick = { showBiometricDialog = true },
                                     modifier = Modifier
@@ -298,34 +309,48 @@ fun AttendanceScreen(
 
             // 3. Students / Asatiza Tab Selector & Stats
             item {
-                Card(
+                Madrassa3dCard(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 14.dp),
-                    shape = RoundedCornerShape(14.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                    shape = RoundedCornerShape(16.dp),
+                    elevation = 5.dp,
+                    gradientColors = listOf(Color(0xFF0F5A3E), Color(0xFF073322), Color(0xFF031A10))
                 ) {
-                    Column(modifier = Modifier.padding(12.dp)) {
+                    Column(modifier = Modifier.padding(14.dp)) {
                         TabRow(
                             selectedTabIndex = selectedTab,
-                            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                            containerColor = Color(0xFF042418),
                             indicator = {},
                             divider = {}
                         ) {
                             Tab(
                                 selected = selectedTab == 0,
                                 onClick = { selectedTab = 0 },
-                                text = { Text(text = "${t("students")} (${filteredStudents.size})", fontSize = 12.sp, fontWeight = if (selectedTab == 0) FontWeight.Bold else FontWeight.Normal) }
+                                text = {
+                                    Text(
+                                        text = "${t("students")} (${filteredStudents.size})",
+                                        fontSize = 12.5.sp,
+                                        fontWeight = if (selectedTab == 0) FontWeight.Bold else FontWeight.Normal,
+                                        color = if (selectedTab == 0) Color(0xFFFFF0C2) else Color.White.copy(alpha = 0.6f)
+                                    )
+                                }
                             )
                             Tab(
                                 selected = selectedTab == 1,
                                 onClick = { selectedTab = 1 },
-                                text = { Text(text = "${t("asatiza")} (${teachers.size})", fontSize = 12.sp, fontWeight = if (selectedTab == 1) FontWeight.Bold else FontWeight.Normal) }
+                                text = {
+                                    Text(
+                                        text = "${t("asatiza")} (${teachers.size})",
+                                        fontSize = 12.5.sp,
+                                        fontWeight = if (selectedTab == 1) FontWeight.Bold else FontWeight.Normal,
+                                        color = if (selectedTab == 1) Color(0xFFFFF0C2) else Color.White.copy(alpha = 0.6f)
+                                    )
+                                }
                             )
                         }
 
-                        Spacer(modifier = Modifier.height(10.dp))
+                        Spacer(modifier = Modifier.height(12.dp))
 
                         // Stats row
                         Row(
@@ -671,24 +696,42 @@ fun PrintAttendanceOptionsDialog(
 
 @Composable
 fun AttendancePill(label: String, count: Int, color: Color) {
+    val brightAccent = when (color) {
+        StatusPresent -> Color(0xFF00E676)
+        StatusAbsent -> Color(0xFFFF5252)
+        StatusLate -> Color(0xFFFFB300)
+        StatusLeave -> Color(0xFF40C4FF)
+        else -> Color(0xFFFFF0C2)
+    }
+
     Surface(
         shape = RoundedCornerShape(10.dp),
-        color = color.copy(alpha = 0.14f),
-        border = BorderStroke(1.dp, color.copy(alpha = 0.35f))
+        color = Color(0xFF042418).copy(alpha = 0.9f),
+        border = BorderStroke(1.2.dp, brightAccent.copy(alpha = 0.7f))
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp),
+            modifier = Modifier.padding(horizontal = 9.dp, vertical = 6.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
                 modifier = Modifier
-                    .size(8.dp)
+                    .size(9.dp)
                     .clip(CircleShape)
-                    .background(color)
+                    .background(brightAccent)
             )
-            Spacer(modifier = Modifier.width(5.dp))
-            Text(text = "$label: ", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurface)
-            Text(text = "$count", fontSize = 11.5.sp, fontWeight = FontWeight.Bold, color = color)
+            Spacer(modifier = Modifier.width(6.dp))
+            Text(
+                text = "$label: ",
+                fontSize = 11.5.sp,
+                fontWeight = FontWeight.Medium,
+                color = Color.White
+            )
+            Text(
+                text = "$count",
+                fontSize = 12.sp,
+                fontWeight = FontWeight.ExtraBold,
+                color = brightAccent
+            )
         }
     }
 }
@@ -703,11 +746,15 @@ fun AttendanceItemRow(
     currentStatus: String,
     onSelectStatus: (String) -> Unit
 ) {
-    Card(
+    Madrassa3dCard(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        shape = RoundedCornerShape(14.dp),
+        elevation = 4.dp,
+        gradientColors = listOf(
+            Color(0xFF0E533A),
+            Color(0xFF073020),
+            Color(0xFF031A11)
+        )
     ) {
         Row(
             modifier = Modifier
@@ -715,12 +762,17 @@ fun AttendanceItemRow(
                 .padding(horizontal = 12.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Student / Teacher Avatar
+            // Student / Teacher Avatar inside 3D Gold-Rimmed Orb
             Box(
                 modifier = Modifier
-                    .size(42.dp)
+                    .size(46.dp)
                     .clip(CircleShape)
-                    .background(EmeraldPrimaryContainer),
+                    .background(
+                        androidx.compose.ui.graphics.Brush.radialGradient(
+                            listOf(Color(0xFF1E6C50), Color(0xFF062B1D))
+                        )
+                    )
+                    .border(1.5.dp, Color(0xFFE5C07B).copy(alpha = 0.85f), CircleShape),
                 contentAlignment = Alignment.Center
             ) {
                 if (!photoUri.isNullOrBlank()) {
@@ -735,9 +787,9 @@ fun AttendanceItemRow(
                 } else {
                     Text(
                         text = name.trim().take(1),
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 16.sp,
-                        color = EmeraldPrimary
+                        fontWeight = FontWeight.ExtraBold,
+                        fontSize = 17.sp,
+                        color = Color(0xFFFFF0C2)
                     )
                 }
             }
@@ -752,7 +804,7 @@ fun AttendanceItemRow(
                         fontWeight = FontWeight.Bold,
                         fontSize = 15.sp,
                         lineHeight = 20.sp,
-                        color = MaterialTheme.colorScheme.onSurface
+                        color = Color.White
                     ),
                     maxLines = 2,
                     softWrap = true,
@@ -768,7 +820,8 @@ fun AttendanceItemRow(
                     Text(
                         text = detailText,
                         style = MaterialTheme.typography.bodySmall.copy(
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = Color(0xFFE5C07B).copy(alpha = 0.9f),
+                            fontWeight = FontWeight.Medium
                         ),
                         maxLines = 1,
                         overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
@@ -778,8 +831,9 @@ fun AttendanceItemRow(
 
             Spacer(modifier = Modifier.width(8.dp))
 
-            // Inline Status Buttons: P (Present), A (Absent), L (Late), Lv (Leave)
-            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            // Inline 3D Status Buttons: P (Present), A (Absent), L (Late), Lv (Leave)
+            // Enhanced with luminous high-contrast labels and distinctive borders
+            Row(horizontalArrangement = Arrangement.spacedBy(5.dp)) {
                 StatusBadgeButton(
                     label = "P",
                     isSelected = currentStatus == "PRESENT",
@@ -816,19 +870,61 @@ fun StatusBadgeButton(
     color: Color,
     onClick: () -> Unit
 ) {
+    val interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+
+    val scale by androidx.compose.animation.core.animateFloatAsState(
+        targetValue = if (isPressed) 0.88f else 1.0f,
+        animationSpec = androidx.compose.animation.core.spring(
+            dampingRatio = androidx.compose.animation.core.Spring.DampingRatioMediumBouncy,
+            stiffness = androidx.compose.animation.core.Spring.StiffnessLow
+        ),
+        label = "statusBtnScale"
+    )
+
+    val brightAccent = when (color) {
+        StatusPresent -> Color(0xFF00E676)
+        StatusAbsent -> Color(0xFFFF5252)
+        StatusLate -> Color(0xFFFFB300)
+        StatusLeave -> Color(0xFF40C4FF)
+        else -> color
+    }
+
     Box(
         modifier = Modifier
-            .size(32.dp)
+            .size(36.dp)
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+            }
             .clip(CircleShape)
-            .background(if (isSelected) color else color.copy(alpha = 0.12f))
-            .clickable { onClick() },
+            .background(
+                if (isSelected) {
+                    androidx.compose.ui.graphics.Brush.verticalGradient(
+                        listOf(brightAccent, color)
+                    )
+                } else {
+                    androidx.compose.ui.graphics.Brush.verticalGradient(
+                        listOf(Color(0xFF0F3E2B), Color(0xFF072418))
+                    )
+                }
+            )
+            .border(
+                width = if (isSelected) 2.dp else 1.2.dp,
+                color = if (isSelected) Color(0xFFFFF0C2) else brightAccent.copy(alpha = 0.7f),
+                shape = CircleShape
+            )
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null
+            ) { onClick() },
         contentAlignment = Alignment.Center
     ) {
         Text(
             text = label,
             fontSize = 12.sp,
-            fontWeight = FontWeight.Bold,
-            color = if (isSelected) Color.White else color
+            fontWeight = FontWeight.ExtraBold,
+            color = if (isSelected) Color(0xFF042418) else Color.White
         )
     }
 }

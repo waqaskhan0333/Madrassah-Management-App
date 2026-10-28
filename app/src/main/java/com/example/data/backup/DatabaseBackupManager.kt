@@ -937,4 +937,321 @@ class DatabaseBackupManager(
     private fun escapeSql(value: String): String {
         return value.replace("'", "''")
     }
+
+    // -------------------------------------------------------------------------
+    // Dedicated Student & Teacher JSON Export / Import
+    // -------------------------------------------------------------------------
+
+    suspend fun exportStudentsToJson(context: Context? = null): String = withContext(Dispatchers.IO) {
+        val root = JSONObject()
+        root.put("format", "MADRASSA_STUDENTS_BACKUP")
+        root.put("version", 1)
+        root.put("exportedAt", System.currentTimeMillis())
+        root.put("exportedDate", dateFormat.format(Date()))
+
+        val students = db.studentDao().getAllStudentsDirect()
+        val arr = JSONArray()
+        students.forEach { s ->
+            val obj = JSONObject()
+            obj.put("id", s.id)
+            obj.put("rollNo", s.rollNo)
+            obj.put("name", s.name)
+            obj.put("fatherName", s.fatherName)
+            obj.put("guardianName", s.guardianName)
+            obj.put("guardianPhone", s.guardianPhone)
+            obj.put("phone2", s.phone2)
+            obj.put("dob", s.dob)
+            obj.put("gender", s.gender)
+            obj.put("cnicBForm", s.cnicBForm)
+            obj.put("admissionDate", s.admissionDate)
+            obj.put("address", s.address)
+            obj.put("department", s.department)
+            obj.put("section", s.section)
+            obj.put("campus", s.campus)
+            obj.put("paray", s.paray)
+            obj.put("status", s.status)
+            obj.put("monthlyFee", s.monthlyFee)
+            obj.put("discount", s.discount)
+            obj.put("photoUri", s.photoUri)
+            obj.put("notes", s.notes)
+            obj.put("isDeleted", s.isDeleted)
+            obj.put("deletedAt", s.deletedAt ?: JSONObject.NULL)
+            obj.put("createdAt", s.createdAt)
+            if (s.photoUri.isNotBlank()) {
+                val b64 = ImageStorageHelper.fileToBase64(s.photoUri)
+                if (b64 != null) {
+                    obj.put("photoBase64", b64)
+                }
+            }
+            arr.put(obj)
+        }
+        root.put("students", arr)
+        root.put("count", students.size)
+        root.toString(2)
+    }
+
+    suspend fun exportTeachersToJson(context: Context? = null): String = withContext(Dispatchers.IO) {
+        val root = JSONObject()
+        root.put("format", "MADRASSA_TEACHERS_BACKUP")
+        root.put("version", 1)
+        root.put("exportedAt", System.currentTimeMillis())
+        root.put("exportedDate", dateFormat.format(Date()))
+
+        val teachers = db.teacherDao().getAllTeachersDirect()
+        val arr = JSONArray()
+        teachers.forEach { t ->
+            val obj = JSONObject()
+            obj.put("id", t.id)
+            obj.put("name", t.name)
+            obj.put("fatherName", t.fatherName)
+            obj.put("phone", t.phone)
+            obj.put("cnic", t.cnic)
+            obj.put("qualification", t.qualification)
+            obj.put("joinDate", t.joinDate)
+            obj.put("monthlySalary", t.monthlySalary)
+            obj.put("assignedDepartment", t.assignedDepartment)
+            obj.put("assignedSections", t.assignedSections)
+            obj.put("photoUri", t.photoUri)
+            obj.put("role", t.role)
+            obj.put("status", t.status)
+            obj.put("isDeleted", t.isDeleted)
+            obj.put("deletedAt", t.deletedAt ?: JSONObject.NULL)
+            if (t.photoUri.isNotBlank()) {
+                val b64 = ImageStorageHelper.fileToBase64(t.photoUri)
+                if (b64 != null) {
+                    obj.put("photoBase64", b64)
+                }
+            }
+            arr.put(obj)
+        }
+        root.put("teachers", arr)
+        root.put("count", teachers.size)
+        root.toString(2)
+    }
+
+    suspend fun exportStudentsAndTeachersToJson(context: Context? = null): String = withContext(Dispatchers.IO) {
+        val root = JSONObject()
+        root.put("format", "MADRASSA_STUDENTS_TEACHERS_BACKUP")
+        root.put("version", 1)
+        root.put("exportedAt", System.currentTimeMillis())
+        root.put("exportedDate", dateFormat.format(Date()))
+
+        val students = db.studentDao().getAllStudentsDirect()
+        val stArr = JSONArray()
+        students.forEach { s ->
+            val obj = JSONObject()
+            obj.put("id", s.id)
+            obj.put("rollNo", s.rollNo)
+            obj.put("name", s.name)
+            obj.put("fatherName", s.fatherName)
+            obj.put("guardianName", s.guardianName)
+            obj.put("guardianPhone", s.guardianPhone)
+            obj.put("phone2", s.phone2)
+            obj.put("dob", s.dob)
+            obj.put("gender", s.gender)
+            obj.put("cnicBForm", s.cnicBForm)
+            obj.put("admissionDate", s.admissionDate)
+            obj.put("address", s.address)
+            obj.put("department", s.department)
+            obj.put("section", s.section)
+            obj.put("campus", s.campus)
+            obj.put("paray", s.paray)
+            obj.put("status", s.status)
+            obj.put("monthlyFee", s.monthlyFee)
+            obj.put("discount", s.discount)
+            obj.put("photoUri", s.photoUri)
+            obj.put("notes", s.notes)
+            obj.put("isDeleted", s.isDeleted)
+            obj.put("deletedAt", s.deletedAt ?: JSONObject.NULL)
+            obj.put("createdAt", s.createdAt)
+            if (s.photoUri.isNotBlank()) {
+                val b64 = ImageStorageHelper.fileToBase64(s.photoUri)
+                if (b64 != null) {
+                    obj.put("photoBase64", b64)
+                }
+            }
+            stArr.put(obj)
+        }
+        root.put("students", stArr)
+
+        val teachers = db.teacherDao().getAllTeachersDirect()
+        val tcArr = JSONArray()
+        teachers.forEach { t ->
+            val obj = JSONObject()
+            obj.put("id", t.id)
+            obj.put("name", t.name)
+            obj.put("fatherName", t.fatherName)
+            obj.put("phone", t.phone)
+            obj.put("cnic", t.cnic)
+            obj.put("qualification", t.qualification)
+            obj.put("joinDate", t.joinDate)
+            obj.put("monthlySalary", t.monthlySalary)
+            obj.put("assignedDepartment", t.assignedDepartment)
+            obj.put("assignedSections", t.assignedSections)
+            obj.put("photoUri", t.photoUri)
+            obj.put("role", t.role)
+            obj.put("status", t.status)
+            obj.put("isDeleted", t.isDeleted)
+            obj.put("deletedAt", t.deletedAt ?: JSONObject.NULL)
+            if (t.photoUri.isNotBlank()) {
+                val b64 = ImageStorageHelper.fileToBase64(t.photoUri)
+                if (b64 != null) {
+                    obj.put("photoBase64", b64)
+                }
+            }
+            tcArr.put(obj)
+        }
+        root.put("teachers", tcArr)
+        root.put("studentCount", students.size)
+        root.put("teacherCount", teachers.size)
+        root.toString(2)
+    }
+
+    suspend fun importStudentsFromJson(
+        json: String,
+        context: Context? = null,
+        replaceExisting: Boolean = false
+    ): Int = withContext(Dispatchers.IO) {
+        val trimmed = json.trim()
+        val arr = if (trimmed.startsWith("[")) {
+            JSONArray(trimmed)
+        } else {
+            val root = JSONObject(trimmed)
+            when {
+                root.has("students") -> root.getJSONArray("students")
+                root.has("data") -> root.getJSONArray("data")
+                else -> JSONArray()
+            }
+        }
+        if (replaceExisting) {
+            db.studentDao().clearAllStudents()
+        }
+        val studentList = mutableListOf<Student>()
+        for (i in 0 until arr.length()) {
+            val o = arr.getJSONObject(i)
+            var photoPath = o.optString("photoUri", "")
+            if (context != null && o.has("photoBase64")) {
+                val pB64 = o.getString("photoBase64")
+                val saved = ImageStorageHelper.base64ToFile(context, pB64, "student_photos", "student_${o.optString("rollNo", "$i")}")
+                if (saved != null) {
+                    photoPath = saved
+                }
+            }
+
+            studentList.add(
+                Student(
+                    id = if (replaceExisting) o.optLong("id", 0) else 0,
+                    rollNo = o.optString("rollNo", "STU-${i + 1}"),
+                    name = o.optString("name", "Student ${i + 1}"),
+                    fatherName = o.optString("fatherName", "Father"),
+                    guardianName = o.optString("guardianName", o.optString("fatherName", "")),
+                    guardianPhone = o.optString("guardianPhone", "0300-0000000"),
+                    phone2 = o.optString("phone2", ""),
+                    dob = o.optString("dob", "2010-01-01"),
+                    gender = o.optString("gender", "MALE"),
+                    cnicBForm = o.optString("cnicBForm", ""),
+                    admissionDate = o.optString("admissionDate", "2024-01-01"),
+                    address = o.optString("address", ""),
+                    department = o.optString("department", "Hifz"),
+                    section = o.optString("section", "Section A"),
+                    campus = o.optString("campus", "Main Campus"),
+                    paray = o.optString("paray", "پارہ 1"),
+                    status = o.optString("status", "ACTIVE"),
+                    monthlyFee = o.optDouble("monthlyFee", 2500.0),
+                    discount = o.optDouble("discount", 0.0),
+                    photoUri = photoPath,
+                    notes = o.optString("notes", ""),
+                    isDeleted = o.optBoolean("isDeleted", false),
+                    deletedAt = if (o.isNull("deletedAt")) null else o.optLong("deletedAt"),
+                    createdAt = o.optLong("createdAt", System.currentTimeMillis())
+                )
+            )
+        }
+        db.studentDao().insertStudents(studentList)
+        studentList.size
+    }
+
+    suspend fun importTeachersFromJson(
+        json: String,
+        context: Context? = null,
+        replaceExisting: Boolean = false
+    ): Int = withContext(Dispatchers.IO) {
+        val trimmed = json.trim()
+        val arr = if (trimmed.startsWith("[")) {
+            JSONArray(trimmed)
+        } else {
+            val root = JSONObject(trimmed)
+            when {
+                root.has("teachers") -> root.getJSONArray("teachers")
+                root.has("data") -> root.getJSONArray("data")
+                else -> JSONArray()
+            }
+        }
+        if (replaceExisting) {
+            db.teacherDao().clearAllTeachers()
+        }
+        val teacherList = mutableListOf<Teacher>()
+        for (i in 0 until arr.length()) {
+            val o = arr.getJSONObject(i)
+            var photoPath = o.optString("photoUri", "")
+            if (context != null && o.has("photoBase64")) {
+                val pB64 = o.getString("photoBase64")
+                val saved = ImageStorageHelper.base64ToFile(context, pB64, "teacher_photos", "teacher_${o.optLong("id", i.toLong())}")
+                if (saved != null) {
+                    photoPath = saved
+                }
+            }
+
+            teacherList.add(
+                Teacher(
+                    id = if (replaceExisting) o.optLong("id", 0) else 0,
+                    name = o.optString("name", "Teacher"),
+                    fatherName = o.optString("fatherName", ""),
+                    phone = o.optString("phone", "0300-0000000"),
+                    cnic = o.optString("cnic", ""),
+                    qualification = o.optString("qualification", "Wafaq-ul-Madaris Al-Alimiyyah"),
+                    joinDate = o.optString("joinDate", "2023-01-15"),
+                    monthlySalary = o.optDouble("monthlySalary", 35000.0),
+                    assignedDepartment = o.optString("assignedDepartment", "Hifz"),
+                    assignedSections = o.optString("assignedSections", "Hifz Morning"),
+                    photoUri = photoPath,
+                    role = o.optString("role", "Ustaz"),
+                    status = o.optString("status", "ACTIVE"),
+                    isDeleted = o.optBoolean("isDeleted", false),
+                    deletedAt = if (o.isNull("deletedAt")) null else o.optLong("deletedAt")
+                )
+            )
+        }
+        db.teacherDao().insertTeachers(teacherList)
+        teacherList.size
+    }
+
+    suspend fun purgeOldRecords(cutoffDate: String): Int = withContext(Dispatchers.IO) {
+        var count = 0
+        count += db.attendanceDao().deleteAttendanceOlderThan(cutoffDate)
+        count += db.feeDao().deletePaidVouchersOlderThan(cutoffDate)
+        count += db.progressDao().deleteHifzOlderThan(cutoffDate)
+        count += db.progressDao().deleteNazraOlderThan(cutoffDate)
+        count += db.progressDao().deleteQaidaOlderThan(cutoffDate)
+        count += db.progressDao().deleteTajweedOlderThan(cutoffDate)
+        count
+    }
+
+    suspend fun resetDatabase(reseed: Boolean = true) = withContext(Dispatchers.IO) {
+        db.studentDao().clearAllStudents()
+        db.teacherDao().clearAllTeachers()
+        db.attendanceDao().clearAllAttendance()
+        db.progressDao().clearAllHifz()
+        db.progressDao().clearAllNazra()
+        db.progressDao().clearAllQaida()
+        db.progressDao().clearAllTajweed()
+        db.courseDao().clearAllCourses()
+        db.examDao().clearAllExams()
+        db.examDao().clearAllExamResults()
+        db.feeDao().clearAllVouchers()
+        db.feeDao().clearAllPayments()
+        if (reseed) {
+            com.example.data.local.InitialDataPreloader.seedDatabase(db)
+        }
+    }
 }

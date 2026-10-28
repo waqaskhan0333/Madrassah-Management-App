@@ -269,7 +269,7 @@ fun AddEditStudentDialog(
                         modifier = Modifier.fillMaxWidth(),
                         trailingIcon = {
                             IconButton(onClick = { deptExpanded = true }) {
-                                Icon(Icons.Default.ArrowDropDown, contentDescription = "Select Dept")
+                                Icon(Icons.Default.ArrowDropDown, contentDescription = "Select Class")
                             }
                         }
                     )
